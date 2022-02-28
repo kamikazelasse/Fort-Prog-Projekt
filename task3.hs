@@ -1,11 +1,9 @@
 import Type (VarName(VarName), CombName, Term(Var, Comb), Rule(Rule), Prog(Prog), Goal(Goal))
+import Data.Char ( ord, chr )
 
 class Vars a where
       allVars :: a -> [VarName]
 
-contains :: VarName -> [VarName] -> Bool 
-contains _ [] = False 
-contains a (x:xs) = if( a == x ) then True else contains a xs
 
 instance Vars Term where
     allVars (Var varName) = [varName]
@@ -30,6 +28,19 @@ instance Vars Goal where
     allVars (Goal []) = []
     allVars (Goal (x:xs)) = removeDuplikates(allVars x ++ (allVars (Goal xs)))
 
+
+freshVars :: [VarName]
+freshVars = [VarName (get n)| n <- [0..]]
+ where 
+     get :: Int -> String
+     get n = [chr((mod n 26) + ord 'A')] ++ if((div (n - 26) 26) < 0) then "" else show (div (n - 26) 26)
+
+
+contains :: VarName -> [VarName] -> Bool 
+contains _ [] = False 
+contains a (x:xs) = if( a == x ) then True else contains a xs
+
+
 removeDuplikates :: [VarName] -> [VarName] 
 removeDuplikates list = removeDuplikatesRec [] list
  where 
@@ -37,3 +48,6 @@ removeDuplikates list = removeDuplikatesRec [] list
      removeDuplikatesRec inList (x:xs) = if (contains x inList) 
                                            then removeDuplikatesRec inList xs 
                                            else removeDuplikatesRec (x:inList) xs
+
+
+-- Dennis hats gefixt
