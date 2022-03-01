@@ -13,15 +13,17 @@ data Subst = Subst [VarName] [Term]
 
 domain :: Subst -> [VarName]
 domain (Subst [] []) = []
-domain (Subst (v:vs) (t:ts)) = if( [v] == allVars t ) 
-                                  then domain (Subst vs ts) 
-                                  else (v:domain (Subst vs ts))
+domain (Subst (v:vs) ((Var x):ts)) = if( v == x ) 
+                                      then domain (Subst vs ts) 
+                                      else (v:domain (Subst vs ts))
+domain (Subst (v:vs) (t:ts)) = (v:domain (Subst vs ts))
 domain _ = []
 
 empty :: Subst
 empty = Subst [] []
 
 single :: VarName -> Term -> Subst
+single name (Var s) = if ( name == s ) then empty else Subst [name] [Var s]
 single name term = Subst [name] [term]
 
 apply :: Subst -> Term -> Term
@@ -75,13 +77,13 @@ instance Test.QuickCheck.Arbitrary Subst where
                 return (Subst (take x vars) (take x terms))
 
 
+
+
+------------------------------- Helperfunctions ---------------------------------------------
 getSmalerLength :: [a] -> [b] -> Int -> Int 
 getSmalerLength [] _ x = x
 getSmalerLength _ [] x = x
 getSmalerLength (_:as) (_:bs) x = getSmalerLength as bs (x+1)
-
-
-------------------------------- Helperfunctions ---------------------------------------------
 
 --           this without this   
 without ::  [VarName] -> [VarName] -> [VarName] 
@@ -94,6 +96,9 @@ without list (r:rs) = if (contains r list)
 allContains :: [VarName] -> [VarName] -> Bool
 allContains []  _ = True
 allContains (x:xs) list = if( contains x list ) then allContains xs list else False 
+
+setEq :: [VarName] -> [VarName] -> Bool 
+setEq a b = allContains a b && allContains b a
 
 --------------------------------- Automatic Tests -----------------------------------------------
 
@@ -120,12 +125,12 @@ prop_test9 = allVars empty == []
 prop_test10 ::VarName -> Bool
 prop_test10 x = allVars (single x (Var x)) == []
 prop_test11 :: VarName -> Term -> Bool 
-prop_test11 x t = if(t /= (Var x)) then allVars (single x t) == allVars t ++ [x]
+prop_test11 x t = if(t /= (Var x)) then setEq (allVars (single x t)) ([x] ++ (allVars t)) 
                                    else True
 prop_test12 :: Subst -> Subst -> Bool
 prop_test12 s1 s2 = allContains(allVars (compose s1 s2)) (allVars s1 ++ allVars s2)
 prop_test13 :: VarName -> VarName -> Bool
-prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x1,x2] -- ich glaube dieser ausdruck ist nicht ganz richtig
+prop_test13 x1 x2 = if(x1 /= x2) then setEq (allVars (compose (single x2 (Var x1)) (single x1 (Var x2)))) [x1,x2] 
                                  else True
 prop_test14 :: Subst -> Bool
 prop_test14 s = allContains (domain s) (allVars s)
