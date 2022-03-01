@@ -5,7 +5,8 @@ import Type ( Goal(Goal), Term(Var, Comb), VarName(VarName))
 import Task3 ( Vars(..), contains, removeDuplikates ) 
 import Task2 ( Pretty(..) ) 
 import Data.List (delete)
-import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll)
+import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Gen, choose)
+import System.Win32 (xBUTTON1)
 
 data Subst = Subst [VarName] [Term] 
  deriving Show
@@ -31,7 +32,7 @@ apply _ _ = (Var (VarName "A"))
 
 
 compose :: Subst -> Subst -> Subst
-compose  subst1 (Subst list2 terms2 )= add (Subst list2 (map (\t -> apply subst1 t) terms2 )) subst1 
+compose  subst1 (Subst list2 terms2) = add (Subst list2 (map (\t -> apply subst1 t) terms2 )) subst1 
  where 
         add :: Subst -> Subst -> Subst
         add subst2 (Subst [] []) = subst2
@@ -67,13 +68,20 @@ instance Vars Subst where
 
 
 instance Test.QuickCheck.Arbitrary Subst where
- arbitrary = do vars <- Test.QuickCheck.arbitrary  
-                terms <- Test.QuickCheck.arbitrary  
-                return (Subst vars terms)
+ arbitrary = do 
+                vars <- Test.QuickCheck.arbitrary  
+                terms <- Test.QuickCheck.arbitrary 
+                x <- choose ( 0, getSmalerLength vars terms 0 )
+                return (Subst (take x vars) (take x terms))
 
 
+getSmalerLength :: [a] -> [b] -> Int -> Int 
+getSmalerLength [] _ x = x
+getSmalerLength _ [] x = x
+getSmalerLength (_:as) (_:bs) x = getSmalerLength as bs (x+1)
 
-------------------------------- not Helperfunktions ---------------------------------------------
+
+------------------------------- Helperfunctions ---------------------------------------------
 
 --           this without this   
 without ::  [VarName] -> [VarName] -> [VarName] 
@@ -82,7 +90,7 @@ without list (r:rs) = if (contains r list)
                             then without (delete r list) rs 
                             else without list rs
 
---  true if    this \/ is in this \/
+--  true if      this  is in  this 
 allContains :: [VarName] -> [VarName] -> Bool
 allContains []  _ = True
 allContains (x:xs) list = if( contains x list ) then allContains xs list else False 
@@ -117,7 +125,7 @@ prop_test11 x t = if(t /= (Var x)) then allVars (single x t) == allVars t ++ [x]
 prop_test12 :: Subst -> Subst -> Bool
 prop_test12 s1 s2 = allContains(allVars (compose s1 s2)) (allVars s1 ++ allVars s2)
 prop_test13 :: VarName -> VarName -> Bool
-prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1))(single x1 (Var x2))) == [x1,x2] -- ich glaube dieser ausdruck ist nicht ganz richtig
+prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x1,x2] -- ich glaube dieser ausdruck ist nicht ganz richtig
                                  else True
 prop_test14 :: Subst -> Bool
 prop_test14 s = allContains (domain s) (allVars s)
