@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task4 where
 
-import Type ( Goal(Goal), Term(..), VarName (VarName) ) 
+import Type ( Goal(Goal), Term(Var, Comb), VarName(VarName)) 
 import Task3 ( Vars(..), contains, removeDuplikates ) 
 import Task2 ( Pretty(..) ) 
 import Data.List (delete)
@@ -15,6 +15,7 @@ domain (Subst [] []) = []
 domain (Subst (v:vs) (t:ts)) = if( [v] == allVars t ) 
                                   then domain (Subst vs ts) 
                                   else (v:domain (Subst vs ts))
+domain _ = []
 
 empty :: Subst
 empty = Subst [] []
@@ -26,23 +27,26 @@ apply :: Subst -> Term -> Term
 apply (Subst [] [] ) term2 = term2
 apply (Subst (n:ns) (t:ts)) (Var x) = if(n == x) then t else apply (Subst ns ts) (Var x)
 apply subst (Comb s terms) = Comb s (map (\x -> apply subst x) terms)
+apply _ _ = (Var (VarName "A"))
 
 
 compose :: Subst -> Subst -> Subst
 compose  subst1 (Subst list2 terms2 )= add (Subst list2 (map (\t -> apply subst1 t) terms2 )) subst1 
  where 
         add :: Subst -> Subst -> Subst
-        add subst1 (Subst [] []) = subst1
+        add subst2 (Subst [] []) = subst2
         add (Subst vars1 terms1) (Subst (v2:v2s) (t2:t2s)) =
             if ( contains v2 vars1 ) 
                 then add (Subst vars1  terms1) (Subst v2s t2s) 
-                else add (Subst (vars1 ++ [v2]) (terms1 ++ [t2])) (Subst v2s t2s) 
+                else add (Subst (vars1 ++ [v2]) (terms1 ++ [t2])) (Subst v2s t2s)
+        add _ _ = empty
        
 restrictTo :: Subst -> [VarName] -> Subst
-restrictTo (Subst [] []) varlist = (Subst [] [])
+restrictTo (Subst [] []) _ = (Subst [] [])
 restrictTo (Subst (v:vs) (t:ts)) varlist = if(contains v varlist )
                                              then compose (Subst [v] [t]) (restrictTo (Subst vs ts) varlist) 
                                              else (restrictTo (Subst vs ts) varlist)
+restrictTo _ _ = empty
        
 
 
@@ -55,7 +59,8 @@ instance Pretty Subst where
          recPretty (Subst [var] [term]) = if( [var] == allVars term) then "" else pretty (Var var) ++ " -> " ++  pretty term
          recPretty (Subst (v:vs) (t:ts)) =  if( [v] == allVars t) 
                                                 then recPretty (Subst vs ts) 
-                                                else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst vs ts) 
+                                                else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst vs ts)
+         recPretty _ = ""
 
 instance Vars Subst where
     allVars (Subst vars terms) = removeDuplikates ( vars ++ allVars (Goal terms) )
@@ -112,7 +117,7 @@ prop_test11 x t = if(t /= (Var x)) then allVars (single x t) == allVars t ++ [x]
 prop_test12 :: Subst -> Subst -> Bool
 prop_test12 s1 s2 = allContains(allVars (compose s1 s2)) (allVars s1 ++ allVars s2)
 prop_test13 :: VarName -> VarName -> Bool
-prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1))(single x1 (Var x2))) == [x1,x2]
+prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1))(single x1 (Var x2))) == [x1,x2] -- ich glaube dieser ausdruck ist nicht ganz richtig
                                  else True
 prop_test14 :: Subst -> Bool
 prop_test14 s = allContains (domain s) (allVars s)
