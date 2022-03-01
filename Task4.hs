@@ -1,9 +1,10 @@
 module Task4 where
 
-import Type ( Term(Var ,Comb), VarName (VarName) ) 
-import Task3 ( Vars(allVars), contains )
-import Task2 (Pretty(pretty))
+import Type ( Goal(Goal), Term(..), VarName (VarName) ) 
+import Task3 ( Vars(..), contains, removeDuplikates ) 
+import Task2 ( Pretty(..) ) 
 import Data.List (delete)
+import Test.QuickCheck (Arbitrary (arbitrary))
 
 data Subst = Subst [VarName] [Term] 
  deriving Show
@@ -55,8 +56,18 @@ instance Pretty Subst where
                                                 then recPretty (Subst vs ts) 
                                                 else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst vs ts) 
 
+instance Vars Subst where
+    allVars (Subst vars terms) = removeDuplikates ( vars ++ allVars (Goal terms) )
 
-------------------------------- Helperfunktions ---------------------------------------------
+
+instance Test.QuickCheck.Arbitrary Subst where
+ arbitrary = do vars <- Test.QuickCheck.arbitrary  
+                terms <- Test.QuickCheck.arbitrary  
+                return (Subst vars terms)
+
+
+
+------------------------------- not Helperfunktions ---------------------------------------------
 
 --           this without this   
 without ::  [VarName] -> [VarName] -> [VarName] 
