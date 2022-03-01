@@ -1,10 +1,11 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Task4 where
 
 import Type ( Goal(Goal), Term(..), VarName (VarName) ) 
 import Task3 ( Vars(..), contains, removeDuplikates ) 
 import Task2 ( Pretty(..) ) 
 import Data.List (delete)
-import Test.QuickCheck (Arbitrary (arbitrary))
+import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll)
 
 data Subst = Subst [VarName] [Term] 
  deriving Show
@@ -80,3 +81,47 @@ without list (r:rs) = if (contains r list)
 allContains :: [VarName] -> [VarName] -> Bool
 allContains []  _ = True
 allContains (x:xs) list = if( contains x list ) then allContains xs list else False 
+
+--------------------------------- Automatic Tests -----------------------------------------------
+
+prop_test1 :: Term -> Bool
+prop_test1 t = apply empty t == t
+prop_test2 :: VarName -> Term -> Bool 
+prop_test2 x t =  apply(single x t) (Var x) == t
+prop_test3 :: Term -> Subst -> Subst -> Bool
+prop_test3 t s1 s2 = apply (compose s1 s2) t == apply s1 (apply s2 t)
+prop_test4 :: Bool
+prop_test4 = domain empty == []
+prop_test5 :: VarName -> Bool
+prop_test5 x = domain (single x (Var x)) == []
+prop_test6 :: VarName -> Term -> Bool
+prop_test6 x t = if(t /= (Var x)) then domain (single x t) == [x]
+                                  else True
+prop_test7 :: Subst -> Subst -> Bool
+prop_test7 s1 s2 = allContains (domain (compose s1 s2)) (domain s1 ++ domain s2)
+prop_test8 :: VarName -> VarName -> Bool
+prop_test8 x1 x2 = if(x1 /= x2) then domain (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x2]
+                                else True 
+prop_test9 :: Bool
+prop_test9 = allVars empty == []
+prop_test10 ::VarName -> Bool
+prop_test10 x = allVars (single x (Var x)) == []
+prop_test11 :: VarName -> Term -> Bool 
+prop_test11 x t = if(t /= (Var x)) then allVars (single x t) == allVars t ++ [x]
+                                   else True
+prop_test12 :: Subst -> Subst -> Bool
+prop_test12 s1 s2 = allContains(allVars (compose s1 s2)) (allVars s1 ++ allVars s2)
+prop_test13 :: VarName -> VarName -> Bool
+prop_test13 x1 x2 = if(x1 /= x2) then allVars (compose (single x2 (Var x1))(single x1 (Var x2))) == [x1,x2]
+                                 else True
+prop_test14 :: Subst -> Bool
+prop_test14 s = allContains (domain s) (allVars s)
+prop_test15 :: [VarName] -> Bool
+prop_test15 xs = domain (restrictTo empty xs) == []
+prop_test16 :: [VarName] -> Subst -> Bool
+prop_test16 xs s = allContains (domain(restrictTo s xs )) xs
+return []
+
+runTests :: IO Bool
+runTests = $quickCheckAll
+
