@@ -2,6 +2,7 @@ module Task4 where
 
 import Type ( Term(Var ,Comb), VarName (VarName) ) 
 import Task3 ( Vars(allVars), contains )
+import Task2 (Pretty(pretty))
 import Data.List (delete)
 
 data Subst = Subst [VarName] [Term] 
@@ -26,13 +27,36 @@ apply subst (Comb s terms) = Comb s (map (\x -> apply subst x) terms)
 
 
 compose :: Subst -> Subst -> Subst
-compose  subst1 (Subst list2 terms2 )= addit (Subst list2 (map (\t -> apply subst1 t) terms2 )) subst1 
+compose  subst1 (Subst list2 terms2 )= add (Subst list2 (map (\t -> apply subst1 t) terms2 )) subst1 
  where 
-        addit :: Subst -> Subst -> Subst
-        addit (Subst [] []) subst2 = subst2
-        addit (Subst vars1 terms1) (Subst vars2 terms2) = Subst (vars1 ++ vars2) (terms1 ++ terms2)
-        
-                                    
+        add :: Subst -> Subst -> Subst
+        add subst1 (Subst [] []) = subst1
+        add (Subst vars1 terms1) (Subst (v2:v2s) (t2:t2s)) =
+            if ( contains v2 vars1 ) 
+                then add (Subst vars1  terms1) (Subst v2s t2s) 
+                else add (Subst (vars1 ++ [v2]) (terms1 ++ [t2])) (Subst v2s t2s) 
+       
+restrictTo :: Subst -> [VarName] -> Subst
+restrictTo (Subst [] []) varlist = (Subst [] [])
+restrictTo (Subst (v:vs) (t:ts)) varlist = if(contains v varlist )
+                                             then compose (Subst [v] [t]) (restrictTo (Subst vs ts) varlist) 
+                                             else (restrictTo (Subst vs ts) varlist)
+       
+
+
+instance Pretty Subst where 
+    pretty (Subst [][]) = "{}"
+    pretty subst = "{" ++ recPretty subst ++ "}" 
+     where 
+         recPretty :: Subst -> String
+         recPretty (Subst [] []) = ""
+         recPretty (Subst [var] [term]) = if( [var] == allVars term) then "" else pretty (Var var) ++ " -> " ++  pretty term
+         recPretty (Subst (v:vs) (t:ts)) =  if( [v] == allVars t) 
+                                                then recPretty (Subst vs ts) 
+                                                else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst vs ts) 
+
+
+------------------------------- Helperfunktions ---------------------------------------------
 
 --           this without this   
 without ::  [VarName] -> [VarName] -> [VarName] 

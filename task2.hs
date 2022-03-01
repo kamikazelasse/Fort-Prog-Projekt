@@ -1,3 +1,5 @@
+module Task2 where
+
 import Type (VarName(VarName), CombName, Term(Var, Comb), Rule(Rule), Prog(Prog), Goal(Goal))
 
 class Pretty a where
