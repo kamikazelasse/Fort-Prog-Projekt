@@ -3,9 +3,10 @@ module Type
   , Goal(Goal)
   ) where
 
-import Control.Monad
+import Control.Monad ( replicateM )
 
 import Test.QuickCheck
+    ( choose, elements, frequency, Arbitrary(arbitrary) )
 
 -- Data type for variable names
 data VarName = VarName String

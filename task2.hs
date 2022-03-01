@@ -1,7 +1,7 @@
 module Task2 where
 
-import Type (VarName(VarName), CombName, Term(Var, Comb), Rule(Rule), Prog(Prog), Goal(Goal))
-
+import Type
+    ( Goal(..), Prog(..), Rule(..), Term(..), VarName(VarName) ) 
 class Pretty a where
   pretty :: a -> String
 
