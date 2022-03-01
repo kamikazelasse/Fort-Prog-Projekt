@@ -1,4 +1,6 @@
-import Type (VarName(VarName), CombName, Term(Var, Comb), Rule(Rule), Prog(Prog), Goal(Goal))
+module Task3  where
+
+import Type ( Goal(..), Prog(..), Rule(..), Term(..), VarName(..) ) 
 import Data.Char ( ord, chr )
 
 class Vars a where
@@ -50,4 +52,3 @@ removeDuplikates list = removeDuplikatesRec [] list
                                            else removeDuplikatesRec (x:inList) xs
 
 
--- Dennis hats gefixt
