@@ -2,7 +2,7 @@
 module Task4 where
 
 import Type ( Goal(Goal), Term(Var, Comb), VarName(VarName)) 
-import Task2 ( Pretty(..) ) 
+import Task2 ( Pretty(..))
 import Task3 ( Vars(..), contains, removeDuplikates ) 
 import Data.List (delete)
 import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, choose)
