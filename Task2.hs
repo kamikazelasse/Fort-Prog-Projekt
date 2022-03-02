@@ -14,7 +14,7 @@ instance Pretty Term where
                             else s ++ "(" ++ pretty t ++ foldr (\a p -> ", " ++ pretty a ++ p ) "" ts  ++")"
      where 
          isPrologList (Comb "." list) = length list == 2
-         isPrologList (Comb _ list) = False
+         isPrologList _ = False
 
          makeList [(Var s), term2] done = pretty (Var s) ++ "|" ++ pretty term2 ++ done
          makeList [ term , (Comb "[]" [])] done = pretty term ++ done
