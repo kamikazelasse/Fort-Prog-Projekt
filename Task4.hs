@@ -5,7 +5,7 @@ import Type ( Goal(Goal), Term(Var, Comb), VarName(VarName))
 import Task2 ( Pretty(..) ) 
 import Task3 ( Vars(..), contains, removeDuplikates ) 
 import Data.List (delete)
-import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Gen, choose)
+import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, choose)
 
 data Subst = Subst [VarName] [Term] 
  deriving Show
@@ -15,7 +15,7 @@ domain (Subst [] []) = []
 domain (Subst (v:vs) ((Var x):ts)) = if( v == x ) 
                                       then domain (Subst vs ts) 
                                       else (v:domain (Subst vs ts))
-domain (Subst (v:vs) (t:ts)) = (v:domain (Subst vs ts))
+domain (Subst (v:vs) (_:ts)) = (v:domain (Subst vs ts))
 domain _ = []
 
 empty :: Subst

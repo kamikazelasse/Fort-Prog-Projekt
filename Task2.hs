@@ -16,13 +16,14 @@ instance Pretty Term where
          isPrologList (Comb "." list) = length list == 2
          isPrologList _ = False
 
-         makeList [(Var s), term2] done = pretty (Var s) ++ "|" ++ pretty term2 ++ done
+         makeList [(Var s1), term2] done = pretty (Var s1) ++ "|" ++ pretty term2 ++ done
          makeList [ term , (Comb "[]" [])] done = pretty term ++ done
          makeList [ term , (Comb "." list) ] done = 
              if isPrologList (Comb "." list) 
                  then pretty term ++ ", " ++ makeList list done 
                  else pretty term ++ ", " ++ pretty (Comb "." list)    
          makeList [term , term2] done = pretty term ++ "|" ++ pretty term2 ++ done
+         makeList _ _ = ""
 
 instance Pretty Rule where
     pretty (Rule term []) = pretty term 
