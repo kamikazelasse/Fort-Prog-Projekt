@@ -2,8 +2,9 @@
 module Task5 where
 
 import Task4 ( Subst, domain, empty, single, apply, compose )
-import Type ( Term(..), VarName )
+import Type ( Term(Var, Comb), VarName )
 import Test.QuickCheck ( quickCheckAll )
+import Task3 (Vars(allVars), contains )
 
 
 ds :: Term -> Term -> Maybe (Term, Term)
@@ -22,9 +23,11 @@ ds term1 term2  = if ( term1 == term2)
      fall3 t1 t2 = Just(t1, t2)
 
 unify :: Term -> Term -> Maybe Subst
-unify t1 t2 = if (ds t1 t2 == Nothing)    
-            then Nothing 
-            else composeMaybe (getSingle (ds t1 t2)) (unify (apply (getSingle (ds t1 t2)) t1 ) (apply (getSingle (ds t1 t2)) t2))
+unify t1 t2 = if isNothing (ds t1 t2)   
+                then Just empty 
+                else if ( isDrittends (ds t1 t2) ) 
+                       then composeMaybe (getSingle (ds t1 t2)) (unify (apply (getSingle (ds t1 t2)) t1 ) (apply (getSingle (ds t1 t2)) t2))
+                       else Nothing
  where 
      getSingle :: Maybe (Term, Term) -> Subst
      getSingle (Just ((Var s) , term2)) = single s term2
@@ -32,9 +35,21 @@ unify t1 t2 = if (ds t1 t2 == Nothing)
      getSingle _ = empty
 
      composeMaybe :: Subst -> Maybe Subst -> Maybe Subst 
-     composeMaybe _ Nothing = Nothing
+     composeMaybe subst1 Nothing = Just subst1
      composeMaybe subst1 (Just subst2) = Just (compose subst1 subst2)
 
+     isDrittends :: Maybe (Term , Term) -> Bool 
+     isDrittends (Just ((Var s), term)) = isVar (Var s)  && not (contains (getVarName (Var s)) (allVars term))
+     isDrittends (Just (term, (Var s))) = isVar (Var s)  && not (contains (getVarName (Var s)) (allVars term))
+     isDrittends _ = False
+     
+     isVar :: Term -> Bool 
+     isVar (Var _) = True 
+     isVar _ = False 
+     
+     getVarName :: Term -> VarName
+     getVarName (Var s) = s 
+     getVarName _ = error ("Term is not a Var")
 
 
 --------------------------------- Automatic Tests -----------------------------------------------
@@ -62,4 +77,4 @@ applyMaybe _ term = term
 
 return []
 runTests :: IO Bool
-runTests = $quickCheckAll
+runTests = $Test.QuickCheck.quickCheckAll
