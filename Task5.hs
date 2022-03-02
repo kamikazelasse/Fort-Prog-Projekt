@@ -1,6 +1,8 @@
 module Task5 where
 
+import Task4 (Subst (Subst), single)
 import Type ( Term(..) )
+import Distribution.Simple.InstallDirs (substPathTemplate)
 
 
 ds :: Term -> Term -> Maybe (Term, Term)
@@ -19,3 +21,8 @@ ds term1 term2  = if ( term1 == term2)
      fall3 t1 t2 = Just(t1, t2)
 
 unify :: Term -> Term -> Maybe Subst
+unify (Var n1) term2 = if(ds (Var n1) term2 == Nothing) then Nothing else Just (single n1 term2)
+unify term1 (Var n2) = if(ds term1 (Var n2) == Nothing) then Nothing else Just (single n2 term1)
+unify (Comb n1 terms) term2 = if(ds (Comb n1 terms) term2) == Nothing then Nothing else Just()
+ 
+unify _ _ = Nothing
