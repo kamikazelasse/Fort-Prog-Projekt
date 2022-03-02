@@ -141,4 +141,3 @@ return []
 
 runTests :: IO Bool
 runTests = $quickCheckAll
-
