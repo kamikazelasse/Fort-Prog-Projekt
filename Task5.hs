@@ -1,8 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Task5 where
 
-import Task4 (Subst (Subst), single)
-import Type ( Term(..) )
-import Distribution.Simple.InstallDirs (substPathTemplate)
+import Task4 ( Subst, domain, empty, single, apply, compose )
+import Type ( Term(..), VarName )
+import Test.QuickCheck ( quickCheckAll )
 
 
 ds :: Term -> Term -> Maybe (Term, Term)
@@ -21,8 +22,44 @@ ds term1 term2  = if ( term1 == term2)
      fall3 t1 t2 = Just(t1, t2)
 
 unify :: Term -> Term -> Maybe Subst
-unify (Var n1) term2 = if(ds (Var n1) term2 == Nothing) then Nothing else Just (single n1 term2)
-unify term1 (Var n2) = if(ds term1 (Var n2) == Nothing) then Nothing else Just (single n2 term1)
-unify (Comb n1 terms) term2 = if(ds (Comb n1 terms) term2) == Nothing then Nothing else Just()
- 
-unify _ _ = Nothing
+unify t1 t2 = if (ds t1 t2 == Nothing)    
+            then Nothing 
+            else composeMaybe (getSingle (ds t1 t2)) (unify (apply (getSingle (ds t1 t2)) t1 ) (apply (getSingle (ds t1 t2)) t2))
+ where 
+     getSingle :: Maybe (Term, Term) -> Subst
+     getSingle (Just ((Var s) , term2)) = single s term2
+     getSingle (Just (term1 , (Var s))) = single s term1
+     getSingle _ = empty
+
+     composeMaybe :: Subst -> Maybe Subst -> Maybe Subst 
+     composeMaybe _ Nothing = Nothing
+     composeMaybe subst1 (Just subst2) = Just (compose subst1 subst2)
+
+
+
+--------------------------------- Automatic Tests -----------------------------------------------
+
+prop_test1 :: Term -> Bool
+prop_test1 t = ds t t == Nothing
+prop_test2 :: Term -> Term -> Bool
+prop_test2 t1 t2 = if ds t1 t2 /= Nothing then t1 /= t2 else True
+prop_test3 :: Term -> Term -> Bool
+prop_test3 t1 t2 = if ds t1 t2 == Nothing then not (isNothing (unify t1 t2)) && domainMaybe (unify t1 t2) == [] else True
+prop_test4 :: Term -> Term -> Bool
+prop_test4 t1 t2 = if not (isNothing (unify t1 t2)) then ds (applyMaybe (unify t1 t2) t1) (applyMaybe (unify t1 t2) t2) == Nothing else True
+
+isNothing :: Maybe a -> Bool 
+isNothing (Just _) = False 
+isNothing Nothing = True
+
+domainMaybe :: Maybe Subst -> [VarName]
+domainMaybe (Just subst) = domain subst 
+domainMaybe _ = []
+
+applyMaybe :: Maybe Subst -> Term -> Term 
+applyMaybe (Just subst) term = apply subst term
+applyMaybe _ term = term
+
+return []
+runTests :: IO Bool
+runTests = $quickCheckAll
