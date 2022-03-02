@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Task4 where
+module Task41 where
 
 import Type ( Goal(Goal), Term(Var, Comb), VarName(VarName)) 
 import Task2 ( Pretty(..))
@@ -26,24 +26,18 @@ single name term = Subst [(name, term)]
 
 apply :: Subst -> Term -> Term
 apply (Subst [] ) term2 = term2
-apply (Subst ((v , t ) : subs)) (Var x) = if(v == x) then t else apply (Subst subs) (Var x)
+apply (Subst ((v,t):subs1)) (Var x) = if (v == x) then t else apply (Subst subs1) (Var x)
 apply subst (Comb s terms) = Comb s (map (\x -> apply subst x) terms)
 
-
 compose :: Subst -> Subst -> Subst
-compose  subst1 (Subst subs) = add (createSubst (domain (Subst subs)) (map (\t -> apply subst1 t) (getTerms (Subst subs)) )) subst1 
- where 
+compose  subst1 (Subst subs) = add (  Subst ( map (\(v,t) -> (v,(apply subst1 t)))  subs) )  subst1 
+ where  
         add :: Subst -> Subst -> Subst
         add subst2 (Subst []) = subst2
-        add (Subst subs1) (Subst ((v,(Var n)): subs2)) =
+        add (Subst subs1) (Subst ((v,t): subs2)) =
             if ( contains v (domain (Subst subs1)))                   
                 then add (Subst subs1) (Subst subs2) 
-                else add (Subst (subs1 ++ [(v,(Var n))])) (Subst subs2)
-        add (Subst subs1) (Subst ((v,t): subs2)) =
-                 if ( contains v (domain (Subst subs1))) 
-                  then add (Subst (without subs1 v)) (Subst subs2)
-                  else add (Subst (subs1 ++ [(v,t)])) (Subst subs2)
-
+                else add (Subst (subs1 ++ [(v,t)])) (Subst subs2)
        
 restrictTo :: Subst -> [VarName] -> Subst
 restrictTo (Subst []) _ = empty
@@ -72,14 +66,19 @@ instance Test.QuickCheck.Arbitrary Subst where
  arbitrary = do 
                 vars <- Test.QuickCheck.arbitrary  
                 terms <- Test.QuickCheck.arbitrary 
-                return (createSubst vars terms )
+                return (createSubst vars terms empty)
 
 
 ------------------------------- Helperfunctions ---------------------------------------------
-createSubst :: [VarName] -> [Term] -> Subst 
-createSubst (v:vs) (t:ts) = compose (single v t) (createSubst vs ts)
-createSubst [] _ = empty
-createSubst _ [] = empty
+createSubst :: [VarName] -> [Term] -> Subst -> Subst 
+createSubst (v:vs) (t:ts) sub = 
+    if contains v (domain sub) 
+        then createSubst vs ts sub
+        else if contains v (allVars t )
+                then createSubst vs ts sub
+                else createSubst vs ts (compose (single v t) sub )
+createSubst [] _ sub = sub
+createSubst _ [] sub = sub
 
 getTerms :: Subst -> [Term]
 getTerms (Subst []) = []
@@ -100,14 +99,17 @@ setEq a b = allContains a b && allContains b a
 
 
 myterm :: Term
-myterm = Comb "g" [Var (VarName "_")]
-mysubs1 :: Subst
-mysubs1 = Subst [(VarName "B",Comb "f" [Comb "f" [Var (VarName "_0"),Comb "f" []],Comb "f" []]),(VarName "_",Comb "f" []),(VarName "B",Comb "f" [Comb "f" [],Comb "g" [Var (VarName "_0"),Comb "g" [Var (VarName "_"),Comb "g" [Var (VarName "B")]]]]),(VarName "_",Var (VarName "_0")),(VarName "B",Var (VarName "_"))]
-mysubs2 :: Subst
-mysubs2 = Subst [(VarName "A",Comb "g" [Comb "g" [Var (VarName "_0"),Comb "g" []]]),(VarName "B",Comb "g" [Comb "g" [Var (VarName "B")],Var (VarName "A")]),(VarName "_",Var (VarName "_0")),(VarName "_",Comb "g" [Var (VarName "B")]),(VarName "B",Var (VarName "B"))]
+myterm = Comb "g" [Var (VarName "_0"),Var (VarName "B")]
 
+mysubs1 :: Subst
+mysubs1 = Subst [(VarName "_",Comb "g" [Var (VarName "B")]),(VarName "A",Comb "f" [Comb "g" [Var (VarName "_0")],Var (VarName "_")])]
+    
+mysubs2 :: Subst
+mysubs2 = Subst [(VarName "A",Var (VarName "B")),(VarName "_0",Comb "f" [Var (VarName "_"),Comb "g" [Comb "f" [],Var (VarName "A")]])]
 
 --------------------------------- Automatic Tests -----------------------------------------------
+
+
 
 prop_test1 :: Term -> Bool
 prop_test1 t = apply empty t == t

@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task5 where
 
-import Task4 ( Subst(Subst), domain, empty, single, apply, compose )
+import Task41 ( Subst(Subst), domain, empty, single, apply, compose )
 import Type ( Term(Var, Comb),VarName (VarName) , CombName)
 import Task2 
 import Test.QuickCheck ( quickCheckAll, verboseCheckAll )
@@ -73,9 +73,9 @@ myTest3 = ds (Var (VarName "X")) (Comb "f" [(Var (VarName "X"))])
 
 
 myterm :: Term
-myterm = Comb "f" [ Comb "g" [Comb "g" [Var (VarName "B")]] , Comb "f" [Var (VarName "_0")]]
+myterm = Comb "g" [Var (VarName "_0"),Var (VarName "_0")]
 myterm2 :: Term
-myterm2 = Comb "f" [(Var (VarName "A")) , (Var (VarName "B"))]
+myterm2 = Comb "g" [Var (VarName "B"),Comb "f" [Comb "f" [Var (VarName "_")]]]
 myterm3 :: Term
 myterm3 =  Comb "f" [ (Comb "g" [Comb "g" [Var (VarName "B")]]) , (Comb "f" [Var (VarName "_0")]) ]
 
