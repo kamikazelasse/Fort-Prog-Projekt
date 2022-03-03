@@ -44,11 +44,7 @@ unify t1 t2 = if isNothing (ds t1 t2)   -- 2.
      isDrittends :: Maybe (Term , Term) -> Bool 
      isDrittends (Just ((Var s), term)) = not (contains s (allVars term))
      isDrittends (Just (term, (Var s))) = not (contains s (allVars term))
-     isDrittends _ = False
-     
-    --  getVarName :: Term -> VarName
-    --  getVarName (Var s) = s 
-    --  getVarName _ = error ("Term is not a Var")
+     isDrittends _ = False     
 
 
 --------------------------------- Automatic Tests -----------------------------------------------
