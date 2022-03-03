@@ -24,27 +24,33 @@ single :: VarName -> Term -> Subst
 single name (Var s) = if ( name == s ) then empty else Subst [(name, Var s)]
 single name term = Subst [(name, term)]
 
+
 apply :: Subst -> Term -> Term
 apply (Subst [] ) term2 = term2
 apply (Subst ((v,t):subs1)) (Var x) = if (v == x) then t else apply (Subst subs1) (Var x)
 apply subst (Comb s terms) = Comb s (map (\x -> apply subst x) terms)
 
+
+
+-- ++ filter (\(v,t) ->isNotAKey v (Subst sub1 ))  sub2
 compose :: Subst -> Subst -> Subst
-compose  subst1 (Subst subs) = add (  Subst ( map (\(v,t) -> (v,(apply subst1 t)))  subs) )  subst1 
- where  
-        add :: Subst -> Subst -> Subst
-        add subst2 (Subst []) = subst2
-        add (Subst subs1) (Subst ((v,t): subs2)) =
-            if ( contains v (domain (Subst subs1)))                   
-                then add (Subst subs1) (Subst subs2) 
-                else add (Subst (subs1 ++ [(v,t)])) (Subst subs2)
-       
+compose  (Subst []) subst2 = subst2
+compose  subst1  (Subst []) = subst1
+compose (Subst sub2) (Subst sub1) = Subst ((map (\(v,t) -> (v, (apply (Subst sub1) t))) sub2 ) ++ filter (\(v,t) ->isNotAKey v (Subst sub1 ))  sub2 )
+ where 
+        isNotAKey :: VarName -> Subst -> Bool 
+        isNotAKey v subs = contains v (allVars (Goal (getTerms subs)))
+
+
 restrictTo :: Subst -> [VarName] -> Subst
 restrictTo (Subst []) _ = empty
-restrictTo (Subst ((v,t): subs)) varlist = if(contains v varlist )
-                                             then compose (Subst [(v,t)]) (restrictTo (Subst subs) varlist) 
-                                             else (restrictTo (Subst subs) varlist)
-       
+restrictTo (Subst subs) varlist = Subst (doRestrict subs varlist)
+    where 
+        doRestrict :: [(VarName, Term)] -> [VarName] -> [(VarName, Term)] 
+        doRestrict [] _ = []
+        doRestrict ((v,t) : s) varlist =  if(contains v varlist )
+                    then  (v,t) : (doRestrict  s varlist) 
+                    else  (doRestrict  s varlist)
 
 
 instance Pretty Subst where 
@@ -99,13 +105,13 @@ setEq a b = allContains a b && allContains b a
 
 
 myterm :: Term
-myterm = Comb "g" [Var (VarName "_0"),Var (VarName "B")]
+myterm = Comb "g" [Comb "f" [Var (VarName "_"),Comb "f" [Comb "g" [Comb "f" [],Comb "g" [Var (VarName "_"),Comb "f" []]],Var (VarName "_0")]]]
 
 mysubs1 :: Subst
-mysubs1 = Subst [(VarName "_",Comb "g" [Var (VarName "B")]),(VarName "A",Comb "f" [Comb "g" [Var (VarName "_0")],Var (VarName "_")])]
+mysubs1 = Subst [(VarName "B",Var (VarName "_0")),(VarName "A",Var (VarName "B"))]
     
 mysubs2 :: Subst
-mysubs2 = Subst [(VarName "A",Var (VarName "B")),(VarName "_0",Comb "f" [Var (VarName "_"),Comb "g" [Comb "f" [],Var (VarName "A")]])]
+mysubs2 = Subst [(VarName "_",Var (VarName "B")),(VarName "_0",Comb "g" [Var (VarName "_")]),(VarName "A",Comb "f" [])]
 
 --------------------------------- Automatic Tests -----------------------------------------------
 
@@ -114,7 +120,7 @@ mysubs2 = Subst [(VarName "A",Var (VarName "B")),(VarName "_0",Comb "f" [Var (Va
 prop_test1 :: Term -> Bool
 prop_test1 t = apply empty t == t
 prop_test2 :: VarName -> Term -> Bool 
-prop_test2 x t =  apply(single x t) (Var x) == t
+prop_test2 x t = apply (single x t) (Var x) == t
 prop_test3 :: Term -> Subst -> Subst -> Bool
 prop_test3 t s1 s2 = apply (compose s1 s2) t == apply s1 (apply s2 t)
 prop_test4 :: Bool
