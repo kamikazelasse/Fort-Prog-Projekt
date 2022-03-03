@@ -1,14 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 import Type
 import Task3 (Vars(allVars), contains, freshVars)
-import Task41 (Subst, empty, compose, single, apply, prop_test1)
+import Task41 (Subst, empty, compose, single, apply)
 import Test.QuickCheck ( quickCheckAll ) 
-
-
+import Data.List
 
 
 rename :: [VarName] -> Rule -> Rule
-rename notAllowdList toRename = rename2 notAllowdList (renameAllAnons toRename (allVars toRename))
+rename notAllowdList toRename = rename2 (notAllowdList ++ allVars(toRename)) (renameAllAnons toRename (allVars toRename))
  where 
      rename2 :: [VarName] -> Rule -> Rule
      rename2 notAllowdList2 toRename2 = actualRename (createSubst (notAllowdList2 ++ (allVars toRename2)) empty 0 ) toRename2
@@ -47,12 +46,22 @@ renameTermList x (t:ts) = if ( contains (VarName "_") (allVars t))
     then (renameTerm x t) : ts
     else t : renameTermList x ts
 
+myTerm1 = [VarName "B"]
+myTerm2 = Rule (Var (VarName "_0")) [Comb "f" []]
 -----------------------------------------------------------------------------------------------------------------
 
 
 prop_test1 ::  [VarName] -> Rule -> Bool 
-prop_test1  xs r = (allVars (rename xs r)) 
+prop_test1 xs r = intersect(allVars (rename xs r)) (allVars r) == []
+prop_test2 :: [VarName] -> Rule -> Bool 
+prop_test2 xs r = intersect(allVars (rename xs r)) xs == [] 
+prop_test3 ::  [VarName] -> Rule -> Bool
+prop_test3 xs r = notElem (VarName "_") (allVars (rename xs r))
+prop_test4 ::  [VarName] -> Rule -> Bool
+prop_test4 xs r = if(notElem (VarName"_") (allVars r)) then length (allVars (rename xs r)) == length (allVars r) else True
+prop_test5 ::  [VarName] -> Rule -> Bool
+prop_test5 xs r = length (allVars(rename xs r)) >= length (allVars r)
 
 return []
 runTests :: IO Bool
-runTests = $Test.QuickCheck.quickCheckAll
+runTests = $quickCheckAll
