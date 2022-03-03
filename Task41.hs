@@ -36,21 +36,21 @@ apply subst (Comb s terms) = Comb s (map (\x -> apply subst x) terms)
 compose :: Subst -> Subst -> Subst
 compose  (Subst []) subst2 = subst2
 compose  subst1  (Subst []) = subst1
-compose (Subst sub2) (Subst sub1) = Subst ((map (\(v,t) -> (v, (apply (Subst sub1) t))) sub2 ) ++ filter (\(v,t) ->isNotAKey v (Subst sub1 ))  sub2 )
+compose (Subst sub1) (Subst sub2) = Subst ((map (\(v,t) -> (v, (apply (Subst sub1) t))) sub2 ) ++ filter (\(v,_) -> isNotAKey v (Subst sub2 ))  sub1 )
  where 
         isNotAKey :: VarName -> Subst -> Bool 
-        isNotAKey v subs = contains v (allVars (Goal (getTerms subs)))
+        isNotAKey v subs = not (contains v (domain subs))
 
 
 restrictTo :: Subst -> [VarName] -> Subst
 restrictTo (Subst []) _ = empty
-restrictTo (Subst subs) varlist = Subst (doRestrict subs varlist)
+restrictTo (Subst subs) var = Subst (doRestrict subs var)
     where 
         doRestrict :: [(VarName, Term)] -> [VarName] -> [(VarName, Term)] 
         doRestrict [] _ = []
         doRestrict ((v,t) : s) varlist =  if(contains v varlist )
-                    then  (v,t) : (doRestrict  s varlist) 
-                    else  (doRestrict  s varlist)
+                    then  (v,t) : (doRestrict s varlist) 
+                    else  (doRestrict s varlist)
 
 
 instance Pretty Subst where 

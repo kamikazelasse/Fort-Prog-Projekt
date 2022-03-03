@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task5 where
 
-import Task41 ( Subst(Subst), domain, empty, single, apply, compose )
-import Type ( Term(Var, Comb),VarName (VarName) , CombName)
-import Task2 
-import Test.QuickCheck ( quickCheckAll, verboseCheckAll )
-import Task3 (Vars(allVars), contains, freshVars )
+import Task41 ( Subst, domain, empty, single, apply, compose )
+import Type ( Term(Var, Comb),VarName (VarName))
+import Task2 () 
+import Test.QuickCheck ( quickCheckAll)
+import Task3 (Vars(allVars), contains)
 
 ds :: Term -> Term -> Maybe (Term, Term)
 ds (Var s1) (Comb s2 []) =  Just ((Var s1), (Comb s2 []))
@@ -22,33 +22,33 @@ ds term1 term2  = if (term1 == term2)
                                                                 then  Just (t1, t2) 
                                                                 else fall3 (Comb s1 t1s) (Comb s2 t2s)
       | otherwise = Just ((Comb s1 (t1:t1s)), (Comb s2 (t2:t2s)))
-     fall3 term1 term2 = Just ( term1, term2) 
+     fall3 t1 t2 = Just ( t1, t2) 
 
 
 unify :: Term -> Term -> Maybe Subst
-unify t1 t2 = if isNothing (ds t1 t2)   
+unify t1 t2 = if isNothing (ds t1 t2)   -- 2.
                 then Just empty 
                 else if ( isDrittends (ds t1 t2) ) 
-                       then composeMaybe (getSingle (ds t1 t2)) (unify (apply (getSingle (ds t1 t2)) t1 ) (apply (getSingle (ds t1 t2)) t2)) 
-                       else Nothing
+                       then composeMaybe (unify (apply (getSingle (ds t1 t2)) t1 ) (apply (getSingle (ds t1 t2)) t2)) (getSingle (ds t1 t2))  
+                       else Nothing -- sonst Fail
  where 
      getSingle :: Maybe (Term, Term) -> Subst
      getSingle (Just ((Var s) , term2)) = single s term2
      getSingle (Just (term1 , (Var s))) = single s term1
      getSingle _ = error ("has to be at least one var")
 
-     composeMaybe :: Subst -> Maybe Subst -> Maybe Subst 
-     composeMaybe   subst1 Nothing = Nothing
-     composeMaybe  subst1 (Just subst2) = Just (compose subst1 subst2)
+     composeMaybe ::  Maybe Subst -> Subst -> Maybe Subst 
+     composeMaybe Nothing _  = Nothing
+     composeMaybe (Just subst1) subst2  = Just (compose subst1 subst2)
 
      isDrittends :: Maybe (Term , Term) -> Bool 
-     isDrittends (Just ((Var s), term)) = not (contains (getVarName (Var s)) (allVars term))
-     isDrittends (Just (term, (Var s))) = not (contains (getVarName (Var s)) (allVars term))
+     isDrittends (Just ((Var s), term)) = not (contains s (allVars term))
+     isDrittends (Just (term, (Var s))) = not (contains s (allVars term))
      isDrittends _ = False
      
-     getVarName :: Term -> VarName
-     getVarName (Var s) = s 
-     getVarName _ = error ("Term is not a Var")
+    --  getVarName :: Term -> VarName
+    --  getVarName (Var s) = s 
+    --  getVarName _ = error ("Term is not a Var")
 
 
 --------------------------------- Automatic Tests -----------------------------------------------
@@ -60,7 +60,9 @@ prop_test2 t1 t2 = if ds t1 t2 /= Nothing then t1 /= t2 else True
 prop_test3 :: Term -> Term -> Bool
 prop_test3 t1 t2 = if ds t1 t2 == Nothing then not (isNothing (unify t1 t2)) && domainMaybe (unify t1 t2) == [] else True
 prop_test4 :: Term -> Term -> Bool
-prop_test4 t1 t2 = if not (isNothing (unify t1 t2)) then isNothing (ds (applyMaybe (unify t1 t2) t1) (applyMaybe (unify t1 t2) t2)) else True
+prop_test4 t1 t2 = if not (isNothing (unify t1 t2)) 
+    then isNothing (ds (applyMaybe (unify t1 t2) t1) (applyMaybe (unify t1 t2) t2)) 
+    else True
 
 myTest :: Maybe Subst
 myTest =unify (Comb "e" [(Comb "m" []),(Var (VarName "M"))]) (Comb "e" [(Var (VarName "F")), (Comb  "h" []) ])
