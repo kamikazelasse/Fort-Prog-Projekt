@@ -1,9 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-import Type
+module Task6 where
+
+import Type ( Rule(..), Term(..), VarName(..) )
 import Task3 (Vars(allVars), contains, freshVars)
 import Task41 (Subst, empty, compose, single, apply, domain)
 import Test.QuickCheck ( quickCheckAll ) 
-import Data.List
+import Data.List ( intersect )
 
 
 rename :: [VarName] -> Rule -> Rule
@@ -46,7 +48,9 @@ renameTermList x (t:ts) = if ( contains (VarName "_") (allVars t))
     then (renameTerm x t) : ts
     else t : renameTermList x ts
 
+myTerm1 :: [VarName]
 myTerm1 = [VarName "B"]
+myTerm2 :: Rule
 myTerm2 = Rule (Var (VarName "_0")) [Comb "f" []]
 -----------------------------------------------------------------------------------------------------------------
 
