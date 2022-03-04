@@ -4,8 +4,9 @@ module Task5 where
 import Type ( Term(Var, Comb),VarName (VarName))
 import Task2 () 
 import Task4 ( Subst, domain, empty, single, apply, compose )
-import Test.QuickCheck ( quickCheckAll)
+import Test.QuickCheck ( quickCheckAll, Property, (==>))
 import Task3 (Vars(allVars))
+import Data.Maybe ( isNothing )
 
 ds :: Term -> Term -> Maybe (Term, Term)
 ds (Var s1) (Comb s2 []) =  Just ((Var s1), (Comb s2 []))
@@ -51,41 +52,19 @@ unify t1 t2 = if isNothing (ds t1 t2)   -- 2.
 
 prop_test1 :: Term -> Bool
 prop_test1 t = ds t t == Nothing
-prop_test2 :: Term -> Term -> Bool
-prop_test2 t1 t2 = if ds t1 t2 /= Nothing then t1 /= t2 else True
-prop_test3 :: Term -> Term -> Bool
-prop_test3 t1 t2 = if ds t1 t2 == Nothing then not (isNothing (unify t1 t2)) && domainMaybe (unify t1 t2) == [] else True
-prop_test4 :: Term -> Term -> Bool
-prop_test4 t1 t2 = if not (isNothing (unify t1 t2)) 
-    then isNothing (ds (applyMaybe (unify t1 t2) t1) (applyMaybe (unify t1 t2) t2)) 
-    else True
+prop_test2 :: Term -> Term -> Property 
+prop_test2 t1 t2 = ds t1 t2 /= Nothing ==> t1 /= t2
+prop_test3 :: Term -> Term -> Bool 
+--ds t1 t2 == Nothing ==> not (isNothing (unify t1 t2)) && domainMaybe (unify t1 t2) == [] quickCheck gives up bcs it's unlikely 
+-- to generate tests where ds t1 t2 == Nothing is true
+prop_test3 t1 t2 = if (ds t1 t2) == Nothing  then (not (isNothing(unify t1 t2)) && domainMaybe (unify t1 t2) == []) else True
+prop_test4 :: Term -> Term -> Property 
+prop_test4 t1 t2 = not (isNothing (unify t1 t2)) ==> isNothing (ds (applyMaybe (unify t1 t2) t1) (applyMaybe (unify t1 t2) t2))
 
-myTest :: Maybe Subst
-myTest =unify (Comb "e" [(Comb "m" []),(Var (VarName "M"))]) (Comb "e" [(Var (VarName "F")), (Comb  "h" []) ])
-
-myTest2 :: Maybe Subst
-myTest2 = unify ( (Comb "equ" [( Comb "f" [(Comb "1" [])]) ,(Comb "g" [(Var (VarName "X"))]) ])) (Comb "equ" [(Var (VarName "Y")) ,(Var (VarName "Y")) ])
-
-myTest3 :: Maybe (Term,Term)
-myTest3 = ds (Var (VarName "X")) (Comb "f" [(Var (VarName "X"))])
-
-
-myterm :: Term
-myterm = Comb "g" [Var (VarName "_0"),Var (VarName "_0")]
-myterm2 :: Term
-myterm2 = Comb "g" [Var (VarName "B"),Comb "f" [Comb "f" [Var (VarName "_")]]]
-myterm3 :: Term
-myterm3 =  Comb "f" [ (Comb "g" [Comb "g" [Var (VarName "B")]]) , (Comb "f" [Var (VarName "_0")]) ]
-
-
-isNothing :: Maybe a -> Bool 
-isNothing (Just _) = False 
-isNothing Nothing = True
 
 domainMaybe :: Maybe Subst -> [VarName]
 domainMaybe (Just subst) = domain subst 
 domainMaybe _ = []
-
 
 applyMaybe :: Maybe Subst -> Term -> Term 
 applyMaybe (Just subst) term = apply subst term

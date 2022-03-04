@@ -4,8 +4,9 @@ import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
 import Task2 ( Pretty(..) )
 import Task3 ( Vars(allVars) )
 import Task4 ( apply, empty, Subst (Subst), compose )
-import Task5 ( unify, isNothing )
+import Task5 ( unify )
 import Task6 ( rename )
+import Data.Maybe ( isNothing )
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show
@@ -19,16 +20,16 @@ sld prog goal = sldOhne prog goal []
 
 sldOhne :: Prog -> Goal -> [VarName] -> SLDTree
 sldOhne (Prog []) goal _ = sldLeaf goal
-sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (unifyRules (map (\r -> rename ohne r)  rules) terms  0)
+sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules (map (\r -> rename ohne r)  rules) terms  0)
 
 
-unifyRules ::  [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
-unifyRules  _ [] _  = []
-unifyRules  rules (t:ts) n = if n >= length rules
+tryRules ::  [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
+tryRules  _ [] _  = []
+tryRules  rules (t:ts) n = if n >= length rules
     then [] 
     else if canApplyRule (rules !! n) t
-            then  (getSubst (rules !! n) t , sldOhne (Prog rules)  (Goal ((applyRule (rules !! n) t (getSubst (rules !! n) t) ) ++ ts))  (allVars (Prog rules))) : unifyRules rules (t:ts) (n+1)
-            else  unifyRules rules (t:ts)  (n+1)
+            then  (getSubst (rules !! n) t , sldOhne (Prog rules)  (Goal ((applyRule (rules !! n) t (getSubst (rules !! n) t) ) ++ ts))  (allVars (Prog rules))) : tryRules rules (t:ts) (n+1)
+            else  tryRules rules (t:ts)  (n+1)
 
 getSubst :: Rule -> Term -> Subst 
 getSubst  (Rule term res) t = getJust (unify term t)

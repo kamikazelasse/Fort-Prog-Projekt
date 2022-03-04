@@ -12,25 +12,24 @@ instance Pretty Term where
     pretty (Var (VarName s)) = s 
     pretty (Comb s []) =  s
     pretty (Comb s (t:ts)) = if isPrologList (Comb s (t:ts))
-                            then "[" ++ makeList (t:ts) "" ++ "]"
+                            then "[" ++ makeList (t:ts) ++ "]"
                             else s ++ "(" ++ pretty t ++ foldr (\a p -> ", " ++ pretty a ++ p ) "" ts  ++")"
      where 
          -- checks whether there is a nicer way to print the list or not
          isPrologList (Comb "." list) = length list == 2
          isPrologList _ = False
          
-         --constructs the pretty list in prolog style
-         makeList [(Var s1), term2] done = pretty (Var s1) ++ "|" ++ pretty term2 ++ done
-         makeList [ term , (Comb "[]" [])] done = pretty term ++ done
-         makeList [ term , (Comb "." list) ] done = 
-             if isPrologList (Comb "." list) 
-                 then pretty term ++ ", " ++ makeList list done 
-                 else pretty term ++ ", " ++ pretty (Comb "." list)    
-         makeList [term , term2] done = pretty term ++ "|" ++ pretty term2 ++ done
-         makeList _ _ = ""
+        --constructs the pretty list in prolog style
+         makeList [t , (Comb "[]" [])]  = pretty t
+         makeList [t , (Comb s l)] = if isPrologList (Comb s l)
+            then pretty t ++ ", "  ++  makeList l
+            else pretty t ++ "|" ++ pretty (Comb s l)
+         makeList [t , t2] = pretty t ++ "|" ++ pretty t2
+         makeList _ = ""
+
 
 instance Pretty Rule where
-    pretty (Rule term []) = pretty term 
+    pretty (Rule term []) = pretty term   
     pretty (Rule term (t:ts)) = pretty term ++ " :- " ++ pretty t ++ foldr (\a p -> p ++ ", " ++ pretty a) "" ts
 
 instance Pretty Prog where

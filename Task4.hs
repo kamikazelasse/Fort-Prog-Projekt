@@ -1,10 +1,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task4 where
 
-import Type ( Goal(Goal), Term(Var, Comb), VarName) 
+import Type ( Goal(Goal), Term(Var, Comb), VarName (VarName)) 
 import Task2 ( Pretty(..))
 import Task3 ( Vars(..), removeDuplikates ) 
-import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll)
+import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Property, (==>))
 
 data Subst = Subst [(VarName, Term)] 
  deriving Show
@@ -60,7 +60,7 @@ instance Pretty Subst where
          -- itterates through the substitution rules and cancels self references
          recPretty :: Subst -> String
          recPretty (Subst []) = ""
-         recPretty (Subst [(var,term)]) = if( [var] == allVars term) then "" else pretty (Var var) ++ " -> " ++  pretty term
+         recPretty (Subst [(var,term)]) = if (Var var == term ) then "" else pretty (Var var) ++ " -> " ++  pretty term
          recPretty (Subst ((v,t): subs)) =  if( [v] == allVars t) 
                                                 then recPretty (Subst subs) 
                                                 else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst subs)
@@ -117,26 +117,22 @@ prop_test4 :: Bool
 prop_test4 = domain empty == []
 prop_test5 :: VarName -> Bool
 prop_test5 x = domain (single x (Var x)) == []
-prop_test6 :: VarName -> Term -> Bool
-prop_test6 x t = if(t /= (Var x)) then domain (single x t) == [x]
-                                  else True
+prop_test6 :: VarName -> Term -> Property
+prop_test6 x t = t /= (Var x) ==> domain (single x t) == [x]
 prop_test7 :: Subst -> Subst -> Bool
 prop_test7 s1 s2 = allcontains (domain (compose s1 s2)) (domain s1 ++ domain s2)
-prop_test8 :: VarName -> VarName -> Bool
-prop_test8 x1 x2 = if(x1 /= x2) then domain (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x2]
-                                else True
+prop_test8 :: VarName -> VarName -> Property 
+prop_test8 x1 x2 = x1 /= x2 ==> domain (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x2]
 prop_test9 :: Bool
 prop_test9 = allVars empty == []
 prop_test10 ::VarName -> Bool
 prop_test10 x = allVars (single x (Var x)) == []
-prop_test11 :: VarName -> Term -> Bool 
-prop_test11 x t = if(t /= (Var x)) then setEq (allVars (single x t)) ([x] ++ (allVars t)) 
-                                   else True
+prop_test11 :: VarName -> Term -> Property 
+prop_test11 x t = t /= (Var x) ==> setEq (allVars (single x t)) ([x] ++ (allVars t)) 
 prop_test12 :: Subst -> Subst -> Bool
 prop_test12 s1 s2 = allcontains(allVars (compose s1 s2)) (allVars s1 ++ allVars s2)
-prop_test13 :: VarName -> VarName -> Bool
-prop_test13 x1 x2 = if(x1 /= x2) then setEq (allVars (compose (single x2 (Var x1)) (single x1 (Var x2)))) [x1,x2] 
-                                 else True
+prop_test13 :: VarName -> VarName -> Property 
+prop_test13 x1 x2 = x1 /= x2 ==> setEq (allVars (compose (single x2 (Var x1)) (single x1 (Var x2)))) [x1,x2]
 prop_test14 :: Subst -> Bool
 prop_test14 s = allcontains (domain s) (allVars s)
 prop_test15 :: [VarName] -> Bool

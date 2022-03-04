@@ -4,7 +4,7 @@ module Task6 where
 import Type ( Rule(..), Term(..), VarName(..) )
 import Task3 (Vars(allVars), freshVars)
 import Task4 (Subst, empty, compose, single, apply, domain)
-import Test.QuickCheck ( quickCheckAll ) 
+import Test.QuickCheck ( quickCheckAll, Property, (==>) ) 
 import Data.List ( intersect )
 
 
@@ -57,14 +57,12 @@ myTerm2 = Rule (Var (VarName "_0")) [Comb "f" []]
 
 prop_test1 ::  [VarName] -> Rule -> Bool 
 prop_test1 xs r = intersect(allVars (rename xs r)) (allVars r) == []
-
 prop_test2 :: [VarName] -> Rule -> Bool 
 prop_test2 xs r = intersect(allVars (rename xs r)) xs == [] 
-
 prop_test3 ::  [VarName] -> Rule -> Bool
-prop_test3 xs r = notElem (VarName "_") (allVars (rename xs r))
-prop_test4 ::  [VarName] -> Rule -> Bool
-prop_test4 xs r = if(notElem (VarName"_") (allVars r)) then length (allVars (rename xs r)) == length (allVars r) else True
+prop_test3 xs r = notElem (VarName "") (allVars (rename xs r))
+prop_test4 ::  [VarName] -> Rule -> Property 
+prop_test4 xs r = notElem (VarName"") (allVars r) ==> length (allVars (rename xs r)) == length (allVars r)
 prop_test5 ::  [VarName] -> Rule -> Bool
 prop_test5 xs r = length (allVars(rename xs r)) >= length (allVars r)
 

@@ -21,18 +21,15 @@ instance Vars Term where
 
 --instance to retrieve all vars from a rule
 instance Vars Rule where
-    allVars (Rule term []) = allVars term
-    allVars (Rule term (x:xs)) = removeDuplikates(allVars term ++ (allVars (Rule x xs)))
+    allVars (Rule t ts) = concat (map allVars (t:ts))
 
 --instance to retrieve all vars from a prog
 instance Vars Prog where
-    allVars (Prog []) = []
-    allVars (Prog (x:xs)) = removeDuplikates(allVars x ++ (allVars (Prog xs)))
+    allVars (Prog rs) = concat (map allVars (rs))
 
 --instance to retrieve all vars from a goal
 instance Vars Goal where
-    allVars (Goal []) = []
-    allVars (Goal (x:xs)) = removeDuplikates(allVars x ++ (allVars (Goal xs)))
+    allVars (Goal ts) = concat (map allVars (ts))
 
 -- infinite list of variabels 
 freshVars :: [VarName]
