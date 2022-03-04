@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task5 where
 
-import Task41 ( Subst, domain, empty, single, apply, compose )
+import Task4 ( Subst, domain, empty, single, apply, compose )
 import Type ( Term(Var, Comb),VarName (VarName))
 import Task2 () 
 import Test.QuickCheck ( quickCheckAll)
-import Task3 (Vars(allVars), contains)
+import Task3 (Vars(allVars))
 
 ds :: Term -> Term -> Maybe (Term, Term)
 ds (Var s1) (Comb s2 []) =  Just ((Var s1), (Comb s2 []))
@@ -19,7 +19,7 @@ ds term1 term2  = if (term1 == term2)
      fall3 :: Term -> Term -> Maybe (Term, Term)
      fall3 (Comb s1 (t1:t1s)) (Comb s2 (t2:t2s)) 
       | (s1 == s2) && (length (t1:t1s) == length (t2:t2s)) = if t1 /= t2 
-                                                                then  Just (t1, t2) 
+                                                                then ds t1 t2
                                                                 else fall3 (Comb s1 t1s) (Comb s2 t2s)
       | otherwise = Just ((Comb s1 (t1:t1s)), (Comb s2 (t2:t2s)))
      fall3 t1 t2 = Just ( t1, t2) 
@@ -42,8 +42,8 @@ unify t1 t2 = if isNothing (ds t1 t2)   -- 2.
      composeMaybe (Just subst1) subst2  = Just (compose subst1 subst2)
 
      isDrittends :: Maybe (Term , Term) -> Bool 
-     isDrittends (Just ((Var s), term)) = not (contains s (allVars term))
-     isDrittends (Just (term, (Var s))) = not (contains s (allVars term))
+     isDrittends (Just ((Var s), term)) = not (elem s (allVars term))
+     isDrittends (Just (term, (Var s))) = not (elem s (allVars term))
      isDrittends _ = False     
 
 

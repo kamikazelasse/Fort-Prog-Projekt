@@ -1,5 +1,6 @@
 module Task7 where
-import Task41 ( apply, empty, Subst (Subst) )
+
+import Task4 ( apply, empty, Subst (Subst) )
 import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
 import Task5 ( unify, isNothing )
 import Task3 ( Vars(allVars) )

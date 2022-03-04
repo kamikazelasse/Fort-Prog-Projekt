@@ -2,8 +2,8 @@
 module Task6 where
 
 import Type ( Rule(..), Term(..), VarName(..) )
-import Task3 (Vars(allVars), contains, freshVars)
-import Task41 (Subst, empty, compose, single, apply, domain)
+import Task3 (Vars(allVars), freshVars)
+import Task4 (Subst, empty, compose, single, apply, domain)
 import Test.QuickCheck ( quickCheckAll ) 
 import Data.List ( intersect )
 
@@ -16,7 +16,7 @@ rename2 notAllowdList2 toRename2 = actualRename (createSubst (notAllowdList2 ++ 
 
 createSubst :: [VarName] -> Subst -> Int -> Subst
 createSubst [] sub _ = sub
-createSubst (l:list) sub n = if (contains (freshVars !! n) (l:list)) || contains (freshVars !! n) (domain sub)
+createSubst (l:list) sub n = if (elem (freshVars !! n) (l:list)) || elem (freshVars !! n) (domain sub)
     then createSubst (l:list) sub (n+1)
     else createSubst list (compose (single l (Var (freshVars !! n))) sub) (n+1)
 
@@ -26,14 +26,14 @@ actualRename s (Rule t ts)  = Rule (apply s t ) (map (\term -> (apply s term)) t
 ---------------------------------- rename all anonymis vars in the Rule -----------------------------------------
 
 renameAllAnons ::Rule -> [VarName] -> Rule
-renameAllAnons r list = if contains (VarName "_") (allVars r)
+renameAllAnons r list = if elem (VarName "_") (allVars r)
     then renameAllAnons (renameFirstAnonyms r list 0) list
     else r
 
 renameFirstAnonyms :: Rule -> [VarName] -> Int -> Rule
-renameFirstAnonyms (Rule t ts) varNameList n = if (contains (freshVars !! n) varNameList) 
+renameFirstAnonyms (Rule t ts) varNameList n = if (elem (freshVars !! n) varNameList) 
     then renameFirstAnonyms (Rule t ts) varNameList (n+1)
-    else if contains (VarName "_") (allVars t) 
+    else if elem (VarName "_") (allVars t) 
         then Rule (renameTerm (freshVars !! n) t) ts 
         else Rule t (renameTermList (freshVars !! n) ts)
 
@@ -44,7 +44,7 @@ renameTerm x (Comb s terms) = (Comb s (renameTermList x terms))
 
 renameTermList :: VarName -> [Term] -> [Term]
 renameTermList _ [] =  error ("in this TermList should be a Var(Varname '_')")
-renameTermList x (t:ts) = if ( contains (VarName "_") (allVars t))
+renameTermList x (t:ts) = if ( elem (VarName "_") (allVars t))
     then (renameTerm x t) : ts
     else t : renameTermList x ts
 
