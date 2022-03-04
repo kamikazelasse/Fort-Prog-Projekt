@@ -3,8 +3,9 @@ module Task4 where
 
 import Type ( Goal(Goal), Term(Var, Comb), VarName (VarName)) 
 import Task2 ( Pretty(..))
-import Task3 ( Vars(..), removeDuplikates ) 
+import Task3 ( Vars(..) ) 
 import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Property, (==>))
+import Data.List (nub)
 
 data Subst = Subst [(VarName, Term)] 
  deriving Show
@@ -43,14 +44,7 @@ compose (Subst sub1) (Subst sub2) = Subst ((map (\(v,t) -> (v, (apply (Subst sub
 -- restricts the subst to the given keys (VarName)
 restrictTo :: Subst -> [VarName] -> Subst
 restrictTo (Subst []) _ = empty
-restrictTo (Subst subs) var = Subst (doRestrict subs var)
-    where 
-        -- itterates over the list and shifts legal tupels into a new subst
-        doRestrict :: [(VarName, Term)] -> [VarName] -> [(VarName, Term)] 
-        doRestrict [] _ = []
-        doRestrict ((v,t) : s) varlist =  if(elem v varlist )
-                    then  (v,t) : (doRestrict s varlist) 
-                    else  (doRestrict s varlist)
+restrictTo (Subst subs) var = Subst (filter (\(x,_) -> elem x var) subs) 
 
 -- makes subst pretty
 instance Pretty Subst where 
@@ -67,28 +61,17 @@ instance Pretty Subst where
 
 -- instance to get all vars of a subst
 instance Vars Subst where
-    allVars subs = removeDuplikates (domain subs ++ allVars (Goal (getTerms subs)))
+    allVars subs = nub (domain subs ++ allVars (getTerms subs))
 
 -- instance to recieve arbitrary substs
 instance Test.QuickCheck.Arbitrary Subst where
  arbitrary = do 
                 vars <- Test.QuickCheck.arbitrary  
                 terms <- Test.QuickCheck.arbitrary 
-                return (createSubst vars terms empty)
+                return (Subst (zip (nub vars) terms))
 
 
 ------------------------------- Helperfunctions ---------------------------------------------
-
--- eliminates illegal substs
-createSubst :: [VarName] -> [Term] -> Subst -> Subst 
-createSubst (v:vs) (t:ts) sub = 
-    if elem v (domain sub) 
-        then createSubst vs ts sub
-        else if elem v (allVars t )
-                then createSubst vs ts sub
-                else createSubst vs ts (compose (single v t) sub )
-createSubst [] _ sub = sub
-createSubst _ [] sub = sub
 
 -- returns all terms of a subst
 getTerms :: Subst -> [Term]

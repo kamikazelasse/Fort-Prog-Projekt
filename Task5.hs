@@ -8,7 +8,7 @@ import Test.QuickCheck ( quickCheckAll, Property, (==>))
 import Task3 (Vars(allVars))
 import Data.Maybe ( isNothing )
 
-ds :: Term -> Term -> Maybe (Term, Term)
+ds :: Term -> Term -> Maybe (Term, Term)  ---- TODO !!!!
 ds (Var s1) (Comb s2 []) =  Just ((Var s1), (Comb s2 []))
 ds (Comb s1 []) (Var s2) = Just ((Comb s1 []), (Var s2))
 ds (Var s1) (Comb s2 terms) =  Just ((Var s1), (Comb s2 terms))
