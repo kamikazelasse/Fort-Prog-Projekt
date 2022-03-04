@@ -1,11 +1,11 @@
 module Task7 where
 
-import Task4 ( apply, empty, Subst (Subst) )
-import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
-import Task5 ( unify, isNothing )
-import Task3 ( Vars(allVars) )
-import Task6 ( rename )
+import Type (Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
 import Task2 ( Pretty(..) )
+import Task3 ( Vars(allVars) )
+import Task4 ( apply, empty, Subst (Subst) )
+import Task5 ( unify, isNothing )
+import Task6 ( rename )
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show

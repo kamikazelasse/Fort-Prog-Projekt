@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task5 where
 
-import Task4 ( Subst, domain, empty, single, apply, compose )
 import Type ( Term(Var, Comb),VarName (VarName))
 import Task2 () 
+import Task4 ( Subst, domain, empty, single, apply, compose )
 import Test.QuickCheck ( quickCheckAll)
 import Task3 (Vars(allVars))
 

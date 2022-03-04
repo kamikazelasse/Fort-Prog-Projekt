@@ -67,7 +67,7 @@ instance Pretty Subst where
 
 -- instance to get all vars of a subst
 instance Vars Subst where
-    allVars subs = removeDuplikates (domain subs ++ allVars (Goal (getTerms subs)) )
+    allVars subs = removeDuplikates (domain subs ++ allVars (Goal (getTerms subs)))
 
 -- instance to recieve arbitrary substs
 instance Test.QuickCheck.Arbitrary Subst where
@@ -95,7 +95,7 @@ getTerms :: Subst -> [Term]
 getTerms (Subst []) = []
 getTerms (Subst ((_ , t) : subs)) = (t: getTerms (Subst subs))
 
---  true if      this  is in  this 
+--  true if      this  is in  this
 allcontains :: [VarName] -> [VarName] -> Bool
 allcontains []  _ = True
 allcontains (x:xs) list = if( elem x list ) then allcontains xs list else False 
@@ -124,7 +124,7 @@ prop_test7 :: Subst -> Subst -> Bool
 prop_test7 s1 s2 = allcontains (domain (compose s1 s2)) (domain s1 ++ domain s2)
 prop_test8 :: VarName -> VarName -> Bool
 prop_test8 x1 x2 = if(x1 /= x2) then domain (compose (single x2 (Var x1)) (single x1 (Var x2))) == [x2]
-                                else True 
+                                else True
 prop_test9 :: Bool
 prop_test9 = allVars empty == []
 prop_test10 ::VarName -> Bool

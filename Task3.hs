@@ -9,7 +9,7 @@ class Vars a where
 --instance to retrieve all vars from a term
 instance Vars Term where
     allVars (Var varName) = [varName]
-    allVars (Comb _ terms ) = doVarList [] terms
+    allVars (Comb _ terms ) = doVarList [] terms -- fold
      where 
         -- get all vars using accumulator technic
         doVarList :: [VarName] -> [Term] -> [VarName]
