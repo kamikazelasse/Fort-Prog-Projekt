@@ -14,6 +14,10 @@ data SLDTree = SLDTree Goal [(Subst,SLDTree)]
 sldLeaf :: Goal -> SLDTree
 sldLeaf goal = SLDTree goal []
 
+isLeaf :: SLDTree -> Bool 
+isLeaf (SLDTree _ []) = True 
+isLeaf _ = False
+
 sld :: Prog -> Goal -> SLDTree
 sld prog goal = sldOhne prog goal []
 
@@ -71,25 +75,22 @@ dfs (SLDTree goal ((s,sldtree):branches)) = bilddfs sldtree s  ++ dfs (SLDTree g
      bilddfs (SLDTree _ []) subst = [subst]
      bilddfs (SLDTree goal ((s,sldtree):branches)) subst = bilddfs sldtree (compose s subst) ++ dfs (SLDTree goal branches)
 
---map (\x  -> compose x s ) (dfs sldtree  ++ dfs (SLDTree goal branches))
 
-bfs :: Strategy 
-bfs(SLDTree goal []) = [] 
-bfs (SLDTree goal branches) = []
+bfs :: Strategy
+bfs (SLDTree _ branches) = bfsR branches
  where 
-     subsList []=[]
-     subsList ((x,_): b) = x: subsList b 
+     bfsR :: [(Subst, SLDTree)] -> [Subst]
+     bfsR [] = []
+     bfsR list = foldr (\x r -> if isLeaf (snd x) then (fst x) : r else r) [] (oneStep list) ++ bfsR (filter (\x ->  not (isLeaf (snd x)) ) (oneStep list))
 
-     treeList []=[]
-     treeList ((_,x): b) = x: treeList b 
+     oneStep :: [(Subst, SLDTree)] -> [(Subst , SLDTree)] 
+     oneStep list = foldr (\x r -> docompose (fst x) (snd x) ++ r) [] list
 
-     bildbfs :: [Subst] -> [SLDTree] -> [Subst]
-     bildbfs [] _ = []
-     bildbfs _ [] = []
-     bildbfs (s:ss) (t:ts) = [] -- TODO !!
+     docompose :: Subst -> SLDTree -> [(Subst , SLDTree)] 
+     docompose s (SLDTree g []) = [(s , sldLeaf g)]
+     docompose s (SLDTree _ list) = map (\l -> (compose (fst l) s, snd l)) list 
 
 
---( map (\x -> compose s x) (bfs (SLDTree goal branches) ++ bfs sldtree))
 
 solveWith :: Prog -> Goal -> Strategy -> [Subst]
 solveWith p g strat = strat (sld p g)
