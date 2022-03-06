@@ -1,11 +1,11 @@
-module Task7 where
+module Task7 (sld , dfs ,bfs , solveWith) where
 
 import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
 import Task2 ( Pretty(..) )
 import Task3 ( Vars(allVars) )
 import Task4 ( apply, empty, Subst (Subst), compose )
 import Task5 ( unify )
-import Task6 ( rename )
+import Task6 (rename)
 import Data.Maybe ( isNothing )
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 

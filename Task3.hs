@@ -1,4 +1,4 @@
-module Task3  where
+module Task3 where
 
 import Type ( Goal(..), Prog(..), Rule(..), Term(..), VarName(..) ) 
 import Data.Char ( ord, chr )

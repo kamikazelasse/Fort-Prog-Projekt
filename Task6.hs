@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Task6 where
+module Task6 (rename) where 
 
 import Type ( Rule(..), Term(..), VarName(..) )
 import Task3 (Vars(allVars), freshVars)

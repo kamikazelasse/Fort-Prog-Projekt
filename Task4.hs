@@ -6,6 +6,7 @@ import Task2 ( Pretty(..))
 import Task3 ( Vars(..) ) 
 import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Property, (==>))
 import Data.List (nub)
+import Data.Bits ( Bits(xor) )
 
 data Subst = Subst [(VarName, Term)] 
  deriving Show
@@ -49,15 +50,11 @@ restrictTo (Subst subs) var = Subst (filter (\(x,_) -> elem x var) subs)
 -- makes subst pretty
 instance Pretty Subst where 
     pretty (Subst []) = "{}"
-    pretty subst = "{" ++ recPretty subst ++ "}" 
+    pretty (Subst subs) = "{" ++ foldr (\x r -> if xor ((prettyTupel x) /= "") (r /= "") then r ++ prettyTupel x else prettyTupel x ++ ", " ++ r)  "" subs ++ "}" 
      where 
-         -- itterates through the substitution rules and cancels self references
-         recPretty :: Subst -> String
-         recPretty (Subst []) = ""
-         recPretty (Subst [(var,term)]) = if (Var var == term ) then "" else pretty (Var var) ++ " -> " ++  pretty term
-         recPretty (Subst ((v,t): subs)) =  if( [v] == allVars t) 
-                                                then recPretty (Subst subs) 
-                                                else pretty (Var v) ++ " -> " ++ pretty t ++ ", " ++ recPretty (Subst subs)
+         prettyTupel :: (VarName , Term ) -> String
+         prettyTupel (v,t) =  ( if(Var v == t  ) then "" else pretty (Var v) ++ " -> " ++ pretty t)
+
 
 -- instance to get all vars of a subst
 instance Vars Subst where
