@@ -1,4 +1,4 @@
-module Task7 (sld , dfs ,bfs , solveWith) where
+module Task7 (sld , dfs ,bfs , solveWith, Strategy) where
 
 import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
 import Task2 ( Pretty(..) )
