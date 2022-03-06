@@ -6,12 +6,34 @@ module Parser
 
 import Control.Exception (SomeException, catch)
 
-import Data.Functor
-import Data.Maybe
+import Data.Functor ( ($>) )
+import Data.Maybe ( fromMaybe )
 
-import Text.Parsec hiding (parse)
+import Text.Parsec
+    ( char,
+      digit,
+      letter,
+      lower,
+      noneOf,
+      oneOf,
+      space,
+      string,
+      upper,
+      between,
+      eof,
+      many1,
+      optionMaybe,
+      sepBy,
+      sepBy1,
+      (<?>),
+      (<|>),
+      many,
+      runParser,
+      skipMany,
+      try,
+      Parsec )
 
-import Type
+import Type ( Term(..), Rule(..), VarName(..), Prog(..), Goal(..) )
 
 -- Type class for parsing
 class Parse a where
