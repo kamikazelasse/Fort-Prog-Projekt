@@ -10,7 +10,6 @@ interaktiveUmgebung =   do
                         putStrLn "Willkommen!"
                         interactiveEnviroment (Prog []) dfs ""
 
-
 helpMsg :: String 
 helpMsg = "Commands available from the prompt:\n" ++
            "<goal>      Solves/proves the specified goal.\n" ++
@@ -93,4 +92,3 @@ solver (s:ss) = do
                 case c of
                    ';' -> solver ss
                    otherwise -> putStr ""
-

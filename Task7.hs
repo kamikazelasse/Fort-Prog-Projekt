@@ -93,7 +93,9 @@ bfs (SLDTree _ branches) = bfsR branches
 
 
 solveWith :: Prog -> Goal -> Strategy -> [Subst]
-solveWith p g strat = strat (sld p g)
+solveWith p g strat | allVars g == [VarName "_"] = [empty]
+                    | otherwise                  = strat (sld p g)
+                     
 
 instance Pretty [Subst] where
     pretty [] = ""
