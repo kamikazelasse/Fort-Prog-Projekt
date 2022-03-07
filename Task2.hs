@@ -1,4 +1,4 @@
-module Task2 where
+module Task2 where 
 
 import Type
     ( Goal(..), Prog(..), Rule(..), Term(..), VarName(VarName) )
