@@ -23,10 +23,6 @@ helpMsg = "Commands available from the prompt:\n" ++
            "            where <strat> is one of 'dfs', 'bfs', or 'iddfs'.\n" ++
            ":t <goal>   Prints the SLD tree for the specified goal."
 
-isEmpti :: [a] -> Bool 
-isEmpti [] = True 
-isEmpti _ = False
-
 interactiveEnviroment :: Prog -> Strategy -> String -> IO()
 interactiveEnviroment prog strat filePath = do
      putStr "?- "
