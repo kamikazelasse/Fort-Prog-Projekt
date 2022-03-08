@@ -21,7 +21,7 @@ grossvater(E, G) :- elter(E, F), vater(F, G).
 
 grossvaeter(Gs) :- findall([E, G], grossvater(E, G), Gs).
 
-vorfahre(N, V) :- vorfahre(N:, V2), vorfahre(V2, V).
+vorfahre(N, V) :- vorfahre(N, V2), vorfahre(V2, V).
 vorfahre(N, V) :- elter(N, V).
 
 geschwister(S, P) :- mutter(S, M), mutter(P,M), \+(=(P, S)).

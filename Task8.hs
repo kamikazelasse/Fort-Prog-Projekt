@@ -4,6 +4,7 @@ import Task2 ( Pretty(pretty) )
 import Parser ( parse, parseFile )
 import Data.Either ( isLeft, fromLeft, fromRight, isRight )
 import Task4 (Subst(Subst))
+import Data.Binary.Get (isEmpty)
 
 interaktiveUmgebung :: IO()
 interaktiveUmgebung =   do 
@@ -80,8 +81,11 @@ interactiveEnviroment prog strat filePath = do
                      Left a ->   do
                                  putStrLn a
                                  interactiveEnviroment prog strat filePath
-                     Right a ->  do
-                                 solver (solveWith prog a strat)
+                     Right a ->  do                                  
+                                 case (solveWith prog a strat) of
+                                    []          -> putStrLn "No solution."
+                                    otherwise   -> solver (solveWith prog a strat)
+                                 
                                  interactiveEnviroment prog strat filePath
 
 solver :: [Subst] -> IO ()

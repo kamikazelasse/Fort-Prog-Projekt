@@ -7,6 +7,7 @@ import Task4 ( apply, compose, empty, restrictTo, Subst )
 import Task5 ( unify )
 import Task6 (rename)
 import Data.Maybe ( isNothing, isJust, fromJust )
+import Distribution.Simple.Command (OptDescr(BoolOpt))
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show
@@ -74,7 +75,11 @@ bfs (SLDTree _ branches) = bfsR branches ----------------------------- TODO ! --
  where 
      bfsR :: [(Subst, SLDTree)] -> [Subst]
      bfsR [] = []
-     bfsR list = foldr (\x r -> if isLeaf (snd x) then (fst x) : r else r) [] (oneStep list) ++ bfsR (filter (\x ->  not (isLeaf (snd x)) ) (oneStep list))
+     bfsR list = foldr (\x r -> if isFin(snd x) then (fst x) : r else r) [] (oneStep list) ++ bfsR (filter (\x ->  not (isLeaf (snd x)) ) (oneStep list))
+
+     isFin :: SLDTree -> Bool
+     isFin (SLDTree (Goal []) _) = True
+     isFin _ = False
 
      oneStep :: [(Subst, SLDTree)] -> [(Subst , SLDTree)] 
      oneStep list = foldr (\x r -> docompose (fst x) (snd x) ++ r) [] list
@@ -86,10 +91,9 @@ bfs (SLDTree _ branches) = bfsR branches ----------------------------- TODO ! --
 
 
 solveWith :: Prog -> Goal -> Strategy -> [Subst]
-solveWith p g strat | allVars g == [VarName "_"] = [empty] -- vllt unnötig  -------------------- Neu -----------------
-                    | otherwise                  = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
+solveWith p g strat = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
                      
 
--- instance Pretty [Subst] where -- total unnötig
---     pretty [] = ""
---     pretty (s:ss) = pretty s ++ "\n" ++ pretty ss
+instance Pretty [Subst] where -- nicht unnötig
+    pretty [] = ""
+    pretty (s:ss) = pretty s ++ "\n" ++ pretty ss

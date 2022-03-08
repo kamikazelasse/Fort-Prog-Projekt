@@ -9,7 +9,7 @@ import Data.List ( intersect )
 
 
 rename :: [VarName] -> Rule -> Rule
-rename notAllowdList toRename = rename2 notAllowdList (renameAllAnons toRename ((allVars toRename) ++ notAllowdList))
+rename notAllowdList toRename = rename2 notAllowdList (renameAnons toRename ((allVars toRename) ++ notAllowdList))
 
 rename2 :: [VarName] -> Rule -> Rule
 rename2 notAllowdList2 toRename2 = actualRename (createSubst (notAllowdList2 ++ (allVars toRename2)) empty 0 ) toRename2
@@ -25,33 +25,27 @@ actualRename s (Rule t ts)  = Rule (apply s t ) (map (\term -> (apply s term)) t
 
 ---------------------------------- rename all anonymis vars in the Rule -----------------------------------------
 
-renameAllAnons ::Rule -> [VarName] -> Rule
-renameAllAnons r list = if elem (VarName "_") (allVars r)
-    then renameAllAnons (renameFirstAnonyms r list 0) list
-    else r
+renameAnons :: Rule -> [VarName] -> Rule
+renameAnons (Rule t ts) list = if  elem (VarName "_") (allVars (Rule t ts)) 
+ then Rule (head (renameAnons2 [t] 0)) (renameAnons2 (ts) (countAnons t))
+ else (Rule t ts)
+ where
+    renameAnons2 :: [Term] -> Int -> [Term]
+    renameAnons2 []  _ =  []
+    renameAnons2 ((Var (VarName "_")):terms) n = if elem (freshVars !! n) list 
+        then renameAnons2 ((Var (VarName "_")):terms) (n+1)
+        else (Var (freshVars !! n)) : renameAnons2 terms (n+1)
+    renameAnons2 ((Var (VarName s)):terms) n = (Var (VarName s)) : renameAnons2 ts n
 
-renameFirstAnonyms :: Rule -> [VarName] -> Int -> Rule
-renameFirstAnonyms (Rule t ts) varNameList n = if (elem (freshVars !! n) varNameList) 
-    then renameFirstAnonyms (Rule t ts) varNameList (n+1)
-    else if elem (VarName "_") (allVars t) 
-        then Rule (renameTerm (freshVars !! n) t) ts 
-        else Rule t (renameTermList (freshVars !! n) ts)
+    renameAnons2 ((Comb s innerterms): terms)  n = if elem  (VarName "_") (allVars (Comb s innerterms) )
+        then (Comb s (renameAnons2 innerterms n) ) : renameAnons2 terms (n + countAnons (Comb s innerterms))
+        else (Comb s innerterms):  renameAnons2 terms n
 
-renameTerm :: VarName -> Term -> Term
-renameTerm x (Var _ ) = Var x 
-renameTerm _ (Comb _ []) = error ("in this Term should be a Var(Varname '_')")
-renameTerm x (Comb s terms) = (Comb s (renameTermList x terms))
 
-renameTermList :: VarName -> [Term] -> [Term]
-renameTermList _ [] =  error ("in this TermList should be a Var(Varname '_')")
-renameTermList x (t:ts) = if ( elem (VarName "_") (allVars t))
-    then (renameTerm x t) : ts
-    else t : renameTermList x ts
+countAnons :: Term -> Int 
+countAnons (Var( VarName s)) = if s == "_" then 1 else 0
+countAnons (Comb _ terms) = foldr(\x r-> r + countAnons x ) 0 terms
 
-myTerm1 :: [VarName]
-myTerm1 = [VarName "B"]
-myTerm2 :: Rule
-myTerm2 = Rule (Var (VarName "_0")) [Comb "f" []]
 -----------------------------------------------------------------------------------------------------------------
 
 
