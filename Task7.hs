@@ -1,12 +1,12 @@
 module Task7 (sld , dfs ,bfs , solveWith, Strategy) where
 
-import Type ( Goal(..), Prog(..), Rule(..), Term (Var, Comb), VarName(VarName) )
+import Type ( Goal(..), Prog(..), Rule(..), Term(..), VarName(..) ) 
 import Task2 ( Pretty(..) )
 import Task3 ( Vars(allVars) )
-import Task4 ( apply, empty, Subst (Subst), compose )
+import Task4 ( apply, compose, empty, restrictTo, Subst ) 
 import Task5 ( unify )
 import Task6 (rename)
-import Data.Maybe ( isNothing )
+import Data.Maybe ( isNothing, isJust, fromJust )
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show
@@ -31,24 +31,18 @@ tryRules ::  [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
 tryRules  _ [] _  = []
 tryRules  rules (t:ts) n = if n >= length rules
     then [] 
-    else if canApplyRule (rules !! n) t
-            then  (getSubst (rules !! n) t , sldOhne (Prog rules)  (Goal ((applyRule (rules !! n) t (getSubst (rules !! n) t) ) ++ ts))  (allVars (Prog rules))) : tryRules rules (t:ts) (n+1)
+    else if canApplyRule (rules !! n) t -------------------------- Besser ---------------------------------
+            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts)))  (allVars (Prog rules))) : tryRules rules (t:ts) (n+1)
             else  tryRules rules (t:ts)  (n+1)
 
 getSubst :: Rule -> Term -> Subst 
-getSubst  (Rule term res) t = getJust (unify term t)
-    where
-        getJust :: Maybe Subst -> Subst
-        getJust (Just subst) = subst
-        getJust Nothing = empty 
+getSubst  (Rule term _) t = fromJust (unify t term)
 
-applyRule :: Rule -> Term -> Subst -> [Term] 
-applyRule (Rule term res) t subst = if isNothing (unify term t) 
-    then error (" error ")
-    else map (\x -> apply subst x) res 
+applyRule :: Rule -> [Term] 
+applyRule (Rule _ res) = res
 
 canApplyRule :: Rule -> Term -> Bool 
-canApplyRule (Rule term res) t = not (isNothing (unify term t))
+canApplyRule (Rule term res) t = isJust (unify term t)
 
 instance Pretty SLDTree where
     pretty tree = make tree 0
@@ -69,15 +63,14 @@ instance Pretty SLDTree where
 type Strategy = SLDTree -> [Subst]
 
 dfs :: Strategy
+dfs (SLDTree (Goal []) _) = [empty] ----------------------------- Neu ------------------------------------------
 dfs (SLDTree _ []) = []
-dfs (SLDTree goal ((s,sldtree):branches)) = bilddfs sldtree s  ++ dfs (SLDTree goal branches)
- where
-     bilddfs (SLDTree _ []) subst = [subst]
-     bilddfs (SLDTree goal ((s,sldtree):branches)) subst = bilddfs sldtree (compose s subst) ++ dfs (SLDTree goal branches)
+dfs (SLDTree goal ((s,sldtree):branches)) = map (\x -> compose x s) (dfs sldtree) ++ dfs (SLDTree goal branches)
+
 
 
 bfs :: Strategy
-bfs (SLDTree _ branches) = bfsR branches
+bfs (SLDTree _ branches) = bfsR branches ----------------------------- TODO ! ------------------------------------------
  where 
      bfsR :: [(Subst, SLDTree)] -> [Subst]
      bfsR [] = []
@@ -93,20 +86,10 @@ bfs (SLDTree _ branches) = bfsR branches
 
 
 solveWith :: Prog -> Goal -> Strategy -> [Subst]
-solveWith p g strat | allVars g == [VarName "_"] = [empty]
-                    | otherwise                  = strat (sld p g)
+solveWith p g strat | allVars g == [VarName "_"] = [empty] -- vllt unnötig  -------------------- Neu -----------------
+                    | otherwise                  = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
                      
 
-instance Pretty [Subst] where
-    pretty [] = ""
-    pretty (s:ss) = pretty s ++ "\n" ++ pretty ss
-
-
-p :: Prog
-p = Prog [Rule (Comb "append" [Var (VarName "[]"), Var (VarName "Ys"), Var (VarName "Ys")]) [], Rule (Comb "append" [Comb "." [Var (VarName "X"), Var (VarName "Xs")], Var (VarName "Ys"), Comb "." [Var (VarName "X"), Var (VarName "Zs")]]) [Comb "append" [Var (VarName "Xs"), Var (VarName "Ys"), Var (VarName "Zs")]]]
-
-g :: Goal
-g = Goal [Comb "append" [Var (VarName "X"), Var (VarName "Y"), Comb "." [Comb "1" [], Comb "[]" []]]]
-
-g2 :: Goal
-g2 = Goal [Comb "append" [Var (VarName "X"), Var (VarName "Y"), Var (VarName "Z")]]
+-- instance Pretty [Subst] where -- total unnötig
+--     pretty [] = ""
+--     pretty (s:ss) = pretty s ++ "\n" ++ pretty ss

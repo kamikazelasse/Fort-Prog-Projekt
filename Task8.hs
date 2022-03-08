@@ -88,7 +88,7 @@ solver :: [Subst] -> IO ()
 solver [] =     putStrLn "No more solutions."
 solver (s:ss) = do
                 putStr (pretty s ++ " ")
-                c <- getChar
+                c <- getLine
                 case c of
-                   ';' -> solver ss
+                   ";" -> solver ss
                    otherwise -> putStr ""
