@@ -36,7 +36,7 @@ concatlist([Xs|Xss], Ys) :- concatlist(Xss, Zs), append(Xs, Zs, Ys).
 
 concatmaplist(P, Xs, Ys) :- maplist(P, Xs, Yss), concatlist(Yss, Ys).
 
-% Test query: "append(Xs,Ys,[2,1]), append(Ys,Xs,[1,2]).". -- problem more results then expected
+% Test query: "append(Xs,Ys,[2,1]), append(Ys,Xs,[1,2]).". -- problem more results then expected !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 % Expected result: One solution, "{Xs -> [2], Ys -> [1]}".
 % Tests whether the mgu found in a resolution step is applied to the whole goal.
 
