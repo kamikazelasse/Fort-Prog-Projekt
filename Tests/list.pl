@@ -48,7 +48,7 @@ concatmaplist(P, Xs, Ys) :- maplist(P, Xs, Yss), concatlist(Yss, Ys).
 % Expected result: Three times the empty substitution.
 
 % Test query: "last([1,2,3],X).".
-% Expected result: One solution, "{X -> 3}".
+% Expected result: One solution, "{X -> 3}". -- problem
 
 % Test query: "last(Xs,3).".
 % Expected result: Infinite solutions, lists with 3 as a last element.
