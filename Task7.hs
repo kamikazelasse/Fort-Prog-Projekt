@@ -26,22 +26,22 @@ sld prog goal = sldOhne prog goal (allVars goal)
 sldOhne :: Prog -> Goal -> [VarName] -> SLDTree
 sldOhne (Prog []) goal _ = sldLeaf goal
 -- sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules (renameRuleList ohne rules) terms  0)
-sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules (map (\r -> rename ohne r)  rules) terms  0)
+sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules ohne (map (\r -> rename ohne r)  rules) terms  0)
 
 renameRuleList :: [VarName] -> [Rule] -> [Rule]
 renameRuleList _ [] = []
 renameRuleList names (r:rules) = rename (names ++ (allVars (r:rules))) r : renameRuleList (names ++ allVars r) rules
 
-tryRules ::  [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
-tryRules  _ [] _  = []
-tryRules  rules (t:ts) n = if n >= length rules
+tryRules :: [VarName] -> [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
+tryRules  _ _ [] _  = []
+tryRules  list rules (t:ts) n = if n >= length rules
     then [] 
     else if canApplyRule (rules !! n) t
-            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts)))  (allVars (Prog rules))) : tryRules rules (t:ts) (n+1)
-            else  tryRules rules (t:ts)  (n+1)
+            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts)))  (list ++ allVars (rules !! n))) : tryRules list rules (t:ts) (n+1)
+            else  tryRules list rules (t:ts)  (n+1)
 
 getSubst :: Rule -> Term -> Subst 
-getSubst  (Rule term _) t = fromJust (unify t term)
+getSubst  (Rule term _) t = fromJust (unify term t)
 
 applyRule :: Rule -> [Term] 
 applyRule (Rule _ res) = res
