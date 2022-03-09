@@ -37,7 +37,7 @@ tryRules  _ _ [] _  = []
 tryRules  list rules (t:ts) n = if n >= length rules
     then [] 
     else if canApplyRule (rules !! n) t
-            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts)))  (list ++ allVars (rules !! n))) : tryRules list rules (t:ts) (n+1)
+            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal ( map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts) )  )  (list ++ allVars (rules !! n))) : tryRules list rules (t:ts) (n+1)
             else  tryRules list rules (t:ts)  (n+1)
 
 getSubst :: Rule -> Term -> Subst 

@@ -8,43 +8,43 @@ import Test.QuickCheck ( quickCheckAll, Property, (==>) )
 import Data.List ( intersect, nub )
 
 
-rename :: [VarName] -> Rule -> Rule
-rename notAllowdList toRename = rename2 notAllowdList (renameAnons toRename (nub ((allVars toRename) ++ notAllowdList)))
 
-rename2 :: [VarName] -> Rule -> Rule
-rename2 notAllowdList2 toRename2 = actualRename (createSubst (notAllowdList2 ++ (allVars toRename2)) empty 0 ) toRename2
+rename :: [VarName] -> Rule -> Rule      
+rename  notAllowedList toRename = renameOhneAnons  (anonRename (notAllowedList ++ (allVars toRename))  (getAllowedVars (notAllowedList ++ allVars toRename) ) toRename) (filter (\x -> x /= (VarName "_")) (allVars toRename) )
 
-createSubst :: [VarName] -> Subst -> Int -> Subst
-createSubst [] sub _ = sub
-createSubst (l:list) sub n = if (elem (freshVars !! n) (l:list)) || elem (freshVars !! n) (domain sub)
-    then createSubst (l:list) sub (n+1)
-    else createSubst list (compose (single l (Var (freshVars !! n))) sub) (n+1)
+renameOhneAnons :: ( Rule, [VarName] ) -> [VarName] -> Rule
+renameOhneAnons (r , _ ) [] = r
+renameOhneAnons (r , notAllowed) (v:vs) = renameOhneAnons ( replaceAllWith v (head (getAllowedVars (notAllowed))) r   , (head (getAllowedVars (notAllowed))) : notAllowed ) vs
 
-actualRename :: Subst -> Rule  -> Rule
-actualRename s (Rule t ts)  = Rule (apply s t ) (map (\term -> (apply s term)) ts)
+-- ersetzt alle ersten vars mit zweiten vars in der Regel
+replaceAllWith :: VarName -> VarName -> Rule -> Rule
+replaceAllWith v with (Rule t ts) = Rule ( apply (single v (Var with)) t  )     (map (\x -> apply (single v (Var with)) x ) ts )
 
----------------------------------- rename all anonymis vars in the Rule -----------------------------------------
+-- gibt mithilfe von nicht erlaubten Vars die Erlaubten zurück
+getAllowedVars :: [VarName] -> [VarName]
+getAllowedVars notAllowdList = filter (\x -> notElem x (notAllowdList) ) freshVars 
 
-renameAnons :: Rule -> [VarName] -> Rule
-renameAnons (Rule t ts) list = if  elem (VarName "_") (allVars (Rule t ts)) 
- then Rule (head (renameAnons2 [t] 0)) (tail (renameAnons2 (t:ts) 0))
- else (Rule t ts)
- where
-    renameAnons2 :: [Term] -> Int -> [Term]
-    renameAnons2 []  _ =  []
-    renameAnons2 terms i = case terms of
-                            ((Var (VarName "_")):rest)  ->  if elem (freshVars !! i) list 
-                                                            then renameAnons2 terms (i+1) 
-                                                            else (Var (freshVars !! i)) : renameAnons2 rest (i+1)
-                            ((Var (VarName s)):rest)    ->  (Var(VarName s)) : renameAnons2 rest i
-                            ((Comb s rest):rest2)       ->  (Comb s (renameAnons2 rest i)) : (renameAnons2 rest2 (i + actualCount rest))
+-- aus nicht erlaubt und erlaubt und regel wird ein tupel mit Regel ohne anons und die neue liste an nicht erlaubten Vars 
+anonRename :: [VarName] -> [VarName] -> Rule -> (Rule, [VarName])
+anonRename list (a:as) rule = if notElem (VarName "_") (allVars rule)
+    then (rule , list)
+    else anonRename (a : list) as (renameFirstAnonWith a rule)
 
-countAnons :: Term -> Int 
-countAnons (Var( VarName s)) = if s == "_" then 1 else 0
-countAnons (Comb _ terms) = foldr(\x r-> r + countAnons x ) 0 terms
+-- macht die erste erscheinung von ner anon in ner Regel zu a 
+renameFirstAnonWith :: VarName -> Rule -> Rule 
+renameFirstAnonWith a (Rule t ts) | elem (VarName "_") (allVars t) =  Rule (renameFirstVar a t) ts
+                                  | otherwise =  Rule t (renameFirstTerm a ts)
 
-actualCount :: [Term] -> Int 
-actualCount = foldr (\x r -> (countAnons x) + r ) 0
+-- macht die erste erscheinung von anont in ner TermListe  zu a
+renameFirstTerm :: VarName -> [Term] -> [Term]
+renameFirstTerm a [] = error "hier sollte eine anonyme var sein"
+renameFirstTerm a (t:ts)  | elem (VarName "_") (allVars t) =  (renameFirstVar a t) : ts
+                          | otherwise = t: (renameFirstTerm a ts)
+
+-- macht die erste erscheinung von nem anon in nem term anon zu a
+renameFirstVar :: VarName -> Term -> Term 
+renameFirstVar a (Var s)  = if s == (VarName "_") then (Var a) else error "hier sollte eine anonyme var sein"
+renameFirstVar a (Comb s terms) = Comb s (renameFirstTerm a terms)
 
 -----------------------------------------------------------------------------------------------------------------
 
