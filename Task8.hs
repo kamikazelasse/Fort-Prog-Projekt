@@ -6,6 +6,7 @@ import Data.Either ( isLeft, fromLeft, fromRight, isRight )
 import Task4 (Subst(Subst))
 import Data.Binary.Get (isEmpty)
 
+
 interaktiveUmgebung :: IO()
 interaktiveUmgebung =   do 
                         putStrLn "Willkommen!"
@@ -27,7 +28,8 @@ interactiveEnviroment :: Prog -> Strategy -> String -> IO()
 interactiveEnviroment prog strat filePath = do
      putStr "?- "
      l <- getLine
-     case (words l) !! 0 of
+     if length (words l) > 0 
+     then case (words l) !! 0 of
          ":h" ->  do
                   putStrLn (helpMsg) 
                   interactiveEnviroment prog strat filePath
@@ -87,6 +89,8 @@ interactiveEnviroment prog strat filePath = do
                                     otherwise   -> solver (solveWith prog a strat)
                                  
                                  interactiveEnviroment prog strat filePath
+      else interactiveEnviroment prog strat filePath
+
 
 solver :: [Subst] -> IO ()
 solver [] =     putStrLn "No more solutions."

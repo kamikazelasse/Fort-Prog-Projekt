@@ -10,8 +10,11 @@ import Data.List ( intersect, nub )
 
 
 rename :: [VarName] -> Rule -> Rule      
-rename  notAllowedList toRename = renameOhneAnons  (anonRename (notAllowedList ++ (allVars toRename))  (getAllowedVars (notAllowedList ++ allVars toRename) ) toRename) (filter (\x -> x /= (VarName "_")) (allVars toRename) )
+rename  notAllowed r = renameOhneAnons  (anonRename (notAllowed ++ (allVars r))  (getAllowedVars (notAllowed ++ allVars r) ) r) (filter (\x -> x /= (VarName "_")) (allVars r) )
 
+-- erhält die Regel mit schon umbennanten anons und die nicht erlaubten sowie die noch umzubennenenden Vars 
+-- dabei wird immer die erste noch umzubennennede Variable auf die erste erlaubte Var abgebildet,
+-- wobei diese dann zu den nicht erlaubten hinzugefügt wird.
 renameOhneAnons :: ( Rule, [VarName] ) -> [VarName] -> Rule
 renameOhneAnons (r , _ ) [] = r
 renameOhneAnons (r , notAllowed) (v:vs) = renameOhneAnons ( replaceAllWith v (head (getAllowedVars (notAllowed))) r   , (head (getAllowedVars (notAllowed))) : notAllowed ) vs

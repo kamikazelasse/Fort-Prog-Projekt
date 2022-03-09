@@ -12,9 +12,11 @@ import Distribution.Simple.Command (OptDescr(BoolOpt))
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show
 
+-- creates a leaf
 sldLeaf :: Goal -> SLDTree
 sldLeaf goal = SLDTree goal []
-
+ 
+-- checks for leaf
 isLeaf :: SLDTree -> Bool 
 isLeaf (SLDTree _ []) = True 
 isLeaf _ = False
@@ -22,32 +24,33 @@ isLeaf _ = False
 sld :: Prog -> Goal -> SLDTree
 sld prog goal = sldOhne prog goal (allVars goal)
 
-
+-- build a SLDTree with renamed porgram and a list of not allowed Vars
 sldOhne :: Prog -> Goal -> [VarName] -> SLDTree
 sldOhne (Prog []) goal _ = sldLeaf goal
--- sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules (renameRuleList ohne rules) terms  0)
-sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules ohne (map (\r -> rename ohne r)  rules) terms  0)
+sldOhne (Prog rules) (Goal terms) ohne = SLDTree (Goal terms) (tryRules ohne (map (\r -> rename ohne r)  rules) terms )
 
-renameRuleList :: [VarName] -> [Rule] -> [Rule]
-renameRuleList _ [] = []
-renameRuleList names (r:rules) = rename (names ++ (allVars (r:rules))) r : renameRuleList (names ++ allVars r) rules
+-- kreirt alle kindknoten (nur die mit möglichen substitutionen zu regeln)
+tryRules :: [VarName] -> [Rule] -> [Term] -> [(Subst, SLDTree)]
+tryRules  _ _ [] = []
+tryRules  list rules (t:ts) = foldr (\r knoten -> createKnot r list rules (t:ts) ++ knoten ) [] rules 
 
-tryRules :: [VarName] -> [Rule] -> [Term] -> Int -> [(Subst, SLDTree)]
-tryRules  _ _ [] _  = []
-tryRules  list rules (t:ts) n = if n >= length rules
-    then [] 
-    else if canApplyRule (rules !! n) t
-            then  (getSubst (rules !! n) t , sldOhne (Prog rules) (Goal ( map (\x -> apply (getSubst (rules !! n) t) x) (applyRule (rules !! n) ++ ts) )  )  (list ++ allVars (rules !! n))) : tryRules list rules (t:ts) (n+1)
-            else  tryRules list rules (t:ts)  (n+1)
+-- erstellt einen subtree 
+createKnot :: Rule -> [VarName] -> [Rule] -> [Term] -> [(Subst, SLDTree)]
+createKnot r list rules (t:ts) = if canApplyRule r t
+    then [(getSubst r t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst r t) x) (applyRule r ++ ts))) (list ++ allVars r) )]
+    else []
 
+-- gibt die substitution von einer Regel und einem Term zurück , wenn nich möglich error
 getSubst :: Rule -> Term -> Subst 
 getSubst  (Rule term _) t = fromJust (unify term t)
 
+-- gibt die "rechte Seite" der Regel zurück
 applyRule :: Rule -> [Term] 
 applyRule (Rule _ res) = res
 
+-- testet ob die Regel mit dem Term unifizierbar ist
 canApplyRule :: Rule -> Term -> Bool 
-canApplyRule (Rule term res) t = isJust (unify term t)
+canApplyRule (Rule term _) t = isJust (unify term t)
 
 instance Pretty SLDTree where
     pretty tree = make tree 0
@@ -68,14 +71,14 @@ instance Pretty SLDTree where
 type Strategy = SLDTree -> [Subst]
 
 dfs :: Strategy
-dfs (SLDTree (Goal []) _) = [empty] ----------------------------- Neu ------------------------------------------
+dfs (SLDTree (Goal []) _) = [empty] 
 dfs (SLDTree _ []) = []
 dfs (SLDTree goal ((s,sldtree):branches)) = map (\x -> compose x s) (dfs sldtree) ++ dfs (SLDTree goal branches)
 
 
 
 bfs :: Strategy
-bfs (SLDTree _ branches) = bfsR branches ----------------------------- TODO ! ------------------------------------------
+bfs (SLDTree _ branches) = bfsR branches 
  where 
      bfsR :: [(Subst, SLDTree)] -> [Subst]
      bfsR [] = []
@@ -98,6 +101,6 @@ solveWith :: Prog -> Goal -> Strategy -> [Subst]
 solveWith p g strat = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
                      
 
-instance Pretty [Subst] where -- nicht unnötig
+instance Pretty [Subst] where 
     pretty [] = ""
     pretty (s:ss) = pretty s ++ "\n" ++ pretty ss
