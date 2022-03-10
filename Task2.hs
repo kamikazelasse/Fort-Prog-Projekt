@@ -20,11 +20,11 @@ instance Pretty Term where
          isPrologList _ = False
          
         --constructs the pretty list in prolog style
-         makeList [t , (Comb "[]" [])]  = pretty t
-         makeList [t , (Comb s l)] = if isPrologList (Comb s l)
-            then pretty t ++ ", "  ++  makeList l
-            else pretty t ++ "|" ++ pretty (Comb s l)
-         makeList [t , t2] = pretty t ++ "|" ++ pretty t2
+         makeList [t1 , (Comb "[]" [])]  = pretty t1
+         makeList [t1 , (Comb s2 l)] = if isPrologList (Comb s2 l)
+            then pretty t1 ++ ", "  ++  makeList l
+            else pretty t1 ++ "|" ++ pretty (Comb s2 l)
+         makeList [t1 , t2] = pretty t1 ++ "|" ++ pretty t2
          makeList _ = ""
 
 

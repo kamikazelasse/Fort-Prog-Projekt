@@ -1,7 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Task4 where
 
-import Type ( Goal(Goal), Term(Var, Comb), VarName (VarName)) 
+import Type ( Term(..), VarName ) 
 import Task2 ( Pretty(..))
 import Task3 ( Vars(..) ) 
 import Test.QuickCheck (Arbitrary (arbitrary), quickCheckAll, Property, (==>))
@@ -66,6 +66,11 @@ instance Test.QuickCheck.Arbitrary Subst where
                 vars <- Test.QuickCheck.arbitrary  
                 terms <- Test.QuickCheck.arbitrary 
                 return (Subst (zip (nub vars) terms))
+
+
+instance Pretty [Subst] where 
+    pretty [] = ""
+    pretty (s:ss) = pretty s ++ "\n" ++ pretty ss
 
 
 ------------------------------- Helperfunctions ---------------------------------------------

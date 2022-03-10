@@ -1,10 +1,11 @@
-import Type ( Goal(Goal), Prog(..) )
-import Task7 ( Strategy, sld, dfs, bfs, solveWith )
-import Task2 ( Pretty(pretty) )
-import Parser ( parse, parseFile )
-import Data.Either ( isLeft, fromLeft, fromRight, isRight )
-import Task4 (Subst(Subst))
-import Data.Binary.Get (isEmpty)
+
+import Type ( Goal, Prog(..) ) 
+import Task2 ( Pretty(pretty) ) 
+import Task4 ( Subst ) 
+import Task7 ( Strategy, sld, dfs, bfs, solveWith ) 
+import Parser ( parseFile, parse ) 
+import Data.Either () 
+
 
 
 interaktiveUmgebung :: IO()
@@ -34,8 +35,8 @@ interactiveEnviroment prog strat filePath = do
                   putStrLn (helpMsg) 
                   interactiveEnviroment prog strat filePath
          ":l" ->  do
-                  parse <- parseFile (tail (tail (tail l)))
-                  case parse of
+                  parsed <- parseFile (tail (tail (tail l)))
+                  case parsed of
                      Right a  -> do
                                  putStrLn "File loaded!"
                                  interactiveEnviroment a strat (tail (tail (tail l)))
@@ -69,7 +70,7 @@ interactiveEnviroment prog strat filePath = do
                      "iddfs"     -> do
                                     putStrLn "not implemented yet!"
                                     interactiveEnviroment prog strat filePath
-                     otherwise   -> do
+                     _   -> do
                                     putStrLn "No viable strategy type \":h\" for help!"
                                     interactiveEnviroment prog strat filePath
          ":t" ->  case parse (tail (tail (tail l))) :: Either String Goal of
@@ -79,14 +80,14 @@ interactiveEnviroment prog strat filePath = do
                      Right a ->  do
                                  putStrLn ( pretty (sld prog a))
                                  interactiveEnviroment prog strat filePath
-         otherwise -> case parse l :: Either String Goal of 
+         _    ->  case parse l :: Either String Goal of 
                      Left a ->   do
                                  putStrLn a
                                  interactiveEnviroment prog strat filePath
                      Right a ->  do                                  
                                  case (solveWith prog a strat) of
                                     []          -> putStrLn "No solution."
-                                    otherwise   -> solver (solveWith prog a strat)
+                                    _   -> solver (solveWith prog a strat)
                                  
                                  interactiveEnviroment prog strat filePath
       else interactiveEnviroment prog strat filePath
@@ -99,4 +100,4 @@ solver (s:ss) = do
                 c <- getLine
                 case c of
                    ";" -> solver ss
-                   otherwise -> putStr ""
+                   _   -> putStr ""

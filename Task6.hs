@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Task6 (rename) where 
+module Task6  where 
 
 import Type ( Rule(..), Term(..), VarName(..) )
 import Task3 (Vars(allVars), freshVars)
-import Task4 (Subst, empty, compose, single, apply, domain)
+import Task4 ( apply, single ) 
 import Test.QuickCheck ( quickCheckAll, Property, (==>) ) 
-import Data.List ( intersect, nub )
+import Data.List ( intersect )
 
 
 
@@ -32,6 +32,7 @@ anonRename :: [VarName] -> [VarName] -> Rule -> (Rule, [VarName])
 anonRename list (a:as) rule = if notElem (VarName "_") (allVars rule)
     then (rule , list)
     else anonRename (a : list) as (renameFirstAnonWith a rule)
+anonRename _ [] _  = error "there is no way that an infinit list is empty"
 
 -- macht die erste erscheinung von ner anon in ner Regel zu a 
 renameFirstAnonWith :: VarName -> Rule -> Rule 
@@ -40,7 +41,7 @@ renameFirstAnonWith a (Rule t ts) | elem (VarName "_") (allVars t) =  Rule (rena
 
 -- macht die erste erscheinung von anont in ner TermListe  zu a
 renameFirstTerm :: VarName -> [Term] -> [Term]
-renameFirstTerm a [] = error "hier sollte eine anonyme var sein"
+renameFirstTerm _ [] = error "hier sollte eine anonyme var sein"
 renameFirstTerm a (t:ts)  | elem (VarName "_") (allVars t) =  (renameFirstVar a t) : ts
                           | otherwise = t: (renameFirstTerm a ts)
 

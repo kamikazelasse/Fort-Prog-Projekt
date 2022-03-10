@@ -1,13 +1,13 @@
-module Task7 (sld , dfs ,bfs , solveWith, Strategy) where
+module Task7  where
 
-import Type ( Goal(..), Prog(..), Rule(..), Term(..), VarName(..) ) 
-import Task2 ( Pretty(..) )
-import Task3 ( Vars(allVars) )
+import Prelude hiding ( repeat )
+import Type ( Goal(..), Prog(..), Rule(..), Term, VarName ) 
+import Task2 ( Pretty(..) ) 
+import Task3 ( Vars(allVars) ) 
 import Task4 ( apply, compose, empty, restrictTo, Subst ) 
-import Task5 ( unify )
-import Task6 (rename)
-import Data.Maybe ( isNothing, isJust, fromJust )
-import Distribution.Simple.Command (OptDescr(BoolOpt))
+import Task5 ( unify ) 
+import Task6 ( rename ) 
+import Data.Maybe () 
 
 data SLDTree = SLDTree Goal [(Subst,SLDTree)] 
  deriving Show
@@ -37,6 +37,7 @@ tryRules  list rules (t:ts) = foldr (\r knoten -> createKnot r list rules (t:ts)
 
 -- erstellt einen subtree 
 createKnot :: Rule -> [VarName] -> [Rule] -> [Term] -> [(Subst, SLDTree)]
+createKnot _ _ _ [] = []
 createKnot (Rule term res) list rules (t:ts) = case unify term t of
     Just subst  -> [(subst , sldOhne (Prog rules) (Goal (map (\x -> apply subst x) (res ++ ts))) (list ++ allVars (Rule term res)) )]
     Nothing     -> [] 
@@ -51,8 +52,8 @@ instance Pretty SLDTree where
          make (SLDTree goal (branch)) n = if n > 6 then repeat "|   " n ++ "...\n" else repeat "|   " n ++ pretty goal ++ "\n" ++ makeBranch branch n
 
          makeBranch :: [(Subst , SLDTree)] -> Int -> String
-         makeBranch [] n = ""
-         makeBranch ((subst,tree):other ) n = repeat "|   " n ++ "+-- " ++ pretty subst ++ "\n" ++ make tree (n+1) ++ makeBranch other n
+         makeBranch [] _ = ""
+         makeBranch ((subst,tree1):other ) n = repeat "|   " n ++ "+-- " ++ pretty subst ++ "\n" ++ make tree1 (n+1) ++ makeBranch other n
 
          repeat :: String -> Int -> String 
          repeat _ 0 = ""
@@ -92,6 +93,4 @@ solveWith :: Prog -> Goal -> Strategy -> [Subst]
 solveWith p g strat = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
                      
 
-instance Pretty [Subst] where 
-    pretty [] = ""
-    pretty (s:ss) = pretty s ++ "\n" ++ pretty ss
+
