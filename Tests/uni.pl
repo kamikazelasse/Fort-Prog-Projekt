@@ -47,7 +47,7 @@
 % Expected result: One solution, too long to display here.
 % This test case demonstrates the exponential runtime of the unification
 % algorithm. CAUTION: This may take too long to compute!
-                                                                %-------------- Problem --------------
+                                                               
 % Test query: "=(p(A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y),p(f(B,B),f(C,C),f(D,D),f(E,E),f(F,F),f(G,G),f(H,H),f(I,I),f(J,J),f(K,K),f(L,L),f(M,M),f(N,N),f(O,O),f(P,P),f(Q,Q),f(R,R),f(S,S),f(T,T),f(U,U),f(V,V),f(W,W),f(X,X),f(Y,Y),f(Z,Z))).".
 % Expected result: One solution, too long to display here.
 % This test case demonstrates the exponential runtime of the unification
