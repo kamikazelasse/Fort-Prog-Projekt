@@ -21,7 +21,7 @@ renameOhneAnons (r , notAllowed) (v:vs) = renameOhneAnons ( replaceAllWith v (he
 
 -- ersetzt alle ersten vars mit zweiten vars in der Regel
 replaceAllWith :: VarName -> VarName -> Rule -> Rule
-replaceAllWith v with (Rule t ts) = Rule ( apply (single v (Var with)) t  )     (map (\x -> apply (single v (Var with)) x ) ts )
+replaceAllWith v with (Rule t ts) = Rule ( apply (single v (Var with)) t  )  (map (\x -> apply (single v (Var with)) x ) ts )
 
 -- gibt mithilfe von nicht erlaubten Vars die Erlaubten zurück
 getAllowedVars :: [VarName] -> [VarName]

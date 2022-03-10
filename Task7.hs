@@ -21,6 +21,7 @@ isLeaf :: SLDTree -> Bool
 isLeaf (SLDTree _ []) = True 
 isLeaf _ = False
 
+
 sld :: Prog -> Goal -> SLDTree
 sld prog goal = sldOhne prog goal (allVars goal)
 
@@ -36,21 +37,11 @@ tryRules  list rules (t:ts) = foldr (\r knoten -> createKnot r list rules (t:ts)
 
 -- erstellt einen subtree 
 createKnot :: Rule -> [VarName] -> [Rule] -> [Term] -> [(Subst, SLDTree)]
-createKnot r list rules (t:ts) = if canApplyRule r t
-    then [(getSubst r t , sldOhne (Prog rules) (Goal (map (\x -> apply (getSubst r t) x) (applyRule r ++ ts))) (list ++ allVars r) )]
-    else []
+createKnot (Rule term res) list rules (t:ts) = case unify term t of
+    Just subst  -> [(subst , sldOhne (Prog rules) (Goal (map (\x -> apply subst x) (res ++ ts))) (list ++ allVars (Rule term res)) )]
+    Nothing     -> [] 
 
--- gibt die substitution von einer Regel und einem Term zurück , wenn nich möglich error
-getSubst :: Rule -> Term -> Subst 
-getSubst  (Rule term _) t = fromJust (unify term t)
 
--- gibt die "rechte Seite" der Regel zurück
-applyRule :: Rule -> [Term] 
-applyRule (Rule _ res) = res
-
--- testet ob die Regel mit dem Term unifizierbar ist
-canApplyRule :: Rule -> Term -> Bool 
-canApplyRule (Rule term _) t = isJust (unify term t)
 
 instance Pretty SLDTree where
     pretty tree = make tree 0

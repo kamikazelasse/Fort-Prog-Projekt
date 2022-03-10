@@ -18,13 +18,20 @@ ds term1 term2 = case (term1,term2) of
     otherwise                 -> fall3 term1 term2
  where
     fall3 :: Term  -> Term  -> Maybe (Term, Term)
-    fall3 (Comb s1 []) (Comb s2 []) = Nothing 
-    fall3 (Comb s1 (t1:t1s)) (Comb s2 (t2:t2s)) 
-     | (s1 == s2) && (length (t1:t1s) == length (t2:t2s)) = if t1 /= t2 
-            then if t1 == Var (VarName "_" ) || t2 == Var (VarName "_" ) then fall3 (Comb s1 t1s) (Comb s2 t2s) else ds t1 t2
-            else fall3 (Comb s1 t1s) (Comb s2 t2s)
-     | otherwise = Just ((Comb s1 (t1:t1s)), (Comb s2 (t2:t2s)))
-    fall3 t1 t2 = Just (t1, t2) -- hier sollte keine Var mehr ankommen  
+    fall3 (Comb s1 t1) (Comb s2 t2) 
+        | (s1 /= s2) || (length t1 /= length t2) = Just ((Comb s1 t1), (Comb s2 t2))
+        | otherwise  = head (foldr ( \(x,y) r -> if isNothing (ds x y) then r else (ds x y) :r    ) [Nothing] (zip t1 t2) )
+    fall3 t1 t2 = Just (t1, t2) -- hier sollte keine Var mehr ankommen 
+
+
+    -- fall3 :: Term  -> Term  -> Maybe (Term, Term)
+    -- fall3 (Comb s1 []) (Comb s2 []) = if s1 == s2 then Nothing else  Just ((Comb s1 []),(Comb s2 []))
+    -- fall3 (Comb s1 (t1:t1s)) (Comb s2 (t2:t2s)) 
+    --  | (s1 == s2) && (length (t1:t1s) == length (t2:t2s)) = if t1 /= t2 
+    --         then if t1 == Var (VarName "_" ) || t2 == Var (VarName "_" ) then fall3 (Comb s1 t1s) (Comb s2 t2s) else ds t1 t2
+    --         else fall3 (Comb s1 t1s) (Comb s2 t2s)
+    --  | otherwise = Just ((Comb s1 (t1:t1s)), (Comb s2 (t2:t2s)))
+    -- fall3 t1 t2 = Just (t1, t2) -- hier sollte keine Var mehr ankommen  
 
 
 -- die bis jetzt erstellte substitution ist eine leere subst (empty )
