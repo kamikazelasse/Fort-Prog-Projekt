@@ -29,7 +29,7 @@ interactiveEnviroment :: Prog -> Strategy -> String -> IO()
 interactiveEnviroment prog strat filePath = do
      putStr "?- "
      l <- getLine
-     if length (words l) > 0 
+     if length (words l) > 0
      then case (words l) !! 0 of
          ":h" ->  do
                   putStrLn (helpMsg) 
@@ -58,7 +58,7 @@ interactiveEnviroment prog strat filePath = do
                                     putStrLn a
                                     interactiveEnviroment prog strat filePath
                      Right a ->     do
-                                    putStrLn "Loaded oder so!"
+                                    putStrLn "Program reloaded!"
                                     interactiveEnviroment a strat filePath  
          ":s" ->  case tail (tail (tail l)) of
                      "bfs"       -> do
@@ -82,7 +82,7 @@ interactiveEnviroment prog strat filePath = do
                                  interactiveEnviroment prog strat filePath
          _    ->  case parse l :: Either String Goal of 
                      Left a ->   do
-                                 putStrLn a
+                                 putStrLn (a ++ "\nEnter \":h\" for help.") 
                                  interactiveEnviroment prog strat filePath
                      Right a ->  do                                  
                                  case (solveWith prog a strat) of
@@ -90,7 +90,9 @@ interactiveEnviroment prog strat filePath = do
                                     _   -> solver (solveWith prog a strat)
                                  
                                  interactiveEnviroment prog strat filePath
-      else interactiveEnviroment prog strat filePath
+      else do
+            putStrLn "Invalid input!\nEnter \":h\" for help."
+            interactiveEnviroment prog strat filePath
 
 
 solver :: [Subst] -> IO ()

@@ -91,6 +91,3 @@ bfs (SLDTree _ branches) = bfsR branches
 
 solveWith :: Prog -> Goal -> Strategy -> [Subst]
 solveWith p g strat = map (\x -> restrictTo x (allVars g) ) (strat (sld p g))
-                     
-
-

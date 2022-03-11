@@ -27,7 +27,7 @@ replaceAllWith v with (Rule t ts) = Rule ( apply (single v (Var with)) t  )  (ma
 getAllowedVars :: [VarName] -> [VarName]
 getAllowedVars notAllowdList = filter (\x -> notElem x (notAllowdList) ) freshVars 
 
--- aus nicht erlaubt und erlaubt und regel wird ein tupel mit Regel ohne anons und die neue liste an nicht erlaubten Vars 
+-- aus nicht erlaubt, erlaubt und regel wird ein Tupel mit Regel ohne anons und die neue liste an nicht erlaubten Vars 
 anonRename :: [VarName] -> [VarName] -> Rule -> (Rule, [VarName])
 anonRename list (a:as) rule = if notElem (VarName "_") (allVars rule)
     then (rule , list)
